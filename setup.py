@@ -1,8 +1,8 @@
 from setuptools import setup
 
 setup(
-    name='factorytest',
-    version='0.1.0',
+    name='factorytest_pinephone',
+    version='0.4.0',
     packages=['factorytest'],
     url='https://gitlab.com/MartijnBraam/factorytest',
     license='MIT',
@@ -16,6 +16,8 @@ setup(
         'Operating System :: POSIX :: Linux',
     ],
     install_requires=[
+        'wifi',
+        'smbus'
     ],
     zip_safe=True,
     include_package_data=True,

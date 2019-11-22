@@ -1,9 +1,16 @@
+import subprocess
 import threading
 
 import gi
 import logging
 import glob
 import os
+
+# For chip self-tests
+import factorytest.selftest as selftest
+
+# For wifi tests
+from wifi import Cell, Scheme
 
 try:
     import importlib.resources as pkg_resources
@@ -16,19 +23,45 @@ from gi.repository import Gtk, GLib, GObject, Gio, GdkPixbuf
 logging.basicConfig(level=logging.DEBUG)
 
 
+def mess_with_permissions():
+    subprocess.call(['sudo', 'chmod', '777', '/dev/i2c-1'])
+
+
+def unload_driver(name):
+    subprocess.call(['sudo', 'rmmod', name])
+
+
+def load_driver(name):
+    subprocess.call(['sudo', 'modprobe', name])
+
+
 class AutoTests(threading.Thread):
     def __init__(self, callback):
         threading.Thread.__init__(self)
         self.callback = callback
 
     def run(self):
+        # i2c sensor tests
         GLib.idle_add(self.callback, ['Testing MPU-6050', 0, None])
         result = self.test_sensor('mpu6050', 'in_accel_x_raw')
+        unload_driver('inv_mpu6050_i2c')
+        result &= selftest.mpu6050(1, 0x68)
+        load_driver('inv_mpu6050_i2c')
         GLib.idle_add(self.callback, ['Testing LIS3MDL', 1, ('sixaxis', result)])
         result = self.test_sensor('lis3mdl', 'in_magn_x_raw')
+        unload_driver('st_magn_i2c')
+        result &= selftest.lis3mdl(1, 0x1e)
+        load_driver('st_magn_i2c')
         GLib.idle_add(self.callback, ['Testing STK3335', 2, ('magnetometer', result)])
         result = self.test_sensor('stk3310', 'in_proximity_raw')
         GLib.idle_add(self.callback, ['Testing RTL8723CS', 3, ('proximity', result)])
+
+        # wifi test
+        try:
+            result = len(list(Cell.all('wlan0'))) > 0
+        except:
+            result = False
+        GLib.idle_add(self.callback, ['Testing EG25', 4, ('wifi', result)])
 
     def test_sensor(self, name, attribute):
         for device in glob.glob('/sys/bus/iio/devices/iio:device*'):
@@ -86,6 +119,8 @@ class Handler:
         self.progress_status = builder.get_object('progress_status')
         self.progress_bar = builder.get_object('progress_bar')
         self.progress_log = builder.get_object('progress_log')
+
+        mess_with_permissions()
 
     def on_quit(self, *args):
         Gtk.main_quit()
