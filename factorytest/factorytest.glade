@@ -11,13 +11,17 @@
       <object class="GtkStack" id="main_stack">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
+        <property name="transition_type">slide-left</property>
         <child>
           <object class="GtkGrid" id="page_main">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+            <property name="row_spacing">6</property>
+            <property name="column_spacing">6</property>
             <child>
               <object class="GtkButton" id="test_auto">
                 <property name="label" translatable="yes">Automatic tests</property>
+                <property name="height_request">64</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -25,6 +29,20 @@
               </object>
               <packing>
                 <property name="left_attach">0</property>
+                <property name="top_attach">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="test_touchscreen">
+                <property name="label" translatable="yes">Touchscreen</property>
+                <property name="height_request">64</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <signal name="clicked" handler="on_test_touchscreen_clicked" swapped="no"/>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
                 <property name="top_attach">0</property>
               </packing>
             </child>
@@ -195,17 +213,6 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkLabel">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="label" translatable="yes">Touchscreen</property>
-                  </object>
-                  <packing>
-                    <property name="left_attach">0</property>
-                    <property name="top_attach">7</property>
-                  </packing>
-                </child>
-                <child>
                   <object class="GtkLabel" id="result_modem">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
@@ -239,10 +246,18 @@
                   </packing>
                 </child>
                 <child>
-                  <placeholder/>
-                </child>
-                <child>
-                  <placeholder/>
+                  <object class="GtkButton" id="progress_back">
+                    <property name="label">gtk-go-back</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="use_stock">True</property>
+                    <signal name="clicked" handler="on_progress_back_clicked" swapped="no"/>
+                  </object>
+                  <packing>
+                    <property name="left_attach">0</property>
+                    <property name="top_attach">7</property>
+                  </packing>
                 </child>
                 <child>
                   <placeholder/>
@@ -259,6 +274,49 @@
             <property name="name">page1</property>
             <property name="title" translatable="yes">page1</property>
             <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkBox" id="page_touchscreen">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="orientation">vertical</property>
+            <child>
+              <object class="GtkScale" id="touchscreen_horisontal">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="show_fill_level">True</property>
+                <property name="round_digits">1</property>
+                <property name="draw_value">False</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkScale" id="touchscreen_vertical">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="vexpand">True</property>
+                <property name="orientation">vertical</property>
+                <property name="inverted">True</property>
+                <property name="show_fill_level">True</property>
+                <property name="round_digits">1</property>
+                <property name="draw_value">False</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="name">page2</property>
+            <property name="title" translatable="yes">page2</property>
+            <property name="position">2</property>
           </packing>
         </child>
       </object>

@@ -1,5 +1,6 @@
 import subprocess
 import threading
+import time
 
 import gi
 import logging
@@ -9,8 +10,14 @@ import os
 # For chip self-tests
 import factorytest.selftest as selftest
 
+# For modem tests
+import factorytest.modem as modem
+
 # For wifi tests
 from wifi import Cell, Scheme
+
+# For camera tests
+import factorytest.camera as camera
 
 try:
     import importlib.resources as pkg_resources
@@ -57,11 +64,28 @@ class AutoTests(threading.Thread):
         GLib.idle_add(self.callback, ['Testing RTL8723CS', 3, ('proximity', result)])
 
         # wifi test
-        try:
-            result = len(list(Cell.all('wlan0'))) > 0
-        except:
-            result = False
+        result = False
+        for _ in range(0, 10):
+            try:
+                if len(list(Cell.all('wlan0'))) > 0:
+                    result = True
+                    break
+            except:
+                time.sleep(1)
+
         GLib.idle_add(self.callback, ['Testing EG25', 4, ('wifi', result)])
+
+        # modem test
+        result = modem.test_eg25()
+        GLib.idle_add(self.callback, ['Testing OV5640', 5, ('modem', result)])
+
+        # Rear camera
+        result = True
+        GLib.idle_add(self.callback, ['Testing GC2145', 6, ('rearcam', result)])
+
+        # Front camera
+        result = True
+        GLib.idle_add(self.callback, ['Done', 7, ('frontcam', result)])
 
     def test_sensor(self, name, attribute):
         for device in glob.glob('/sys/bus/iio/devices/iio:device*'):
@@ -111,14 +135,26 @@ class Handler:
         self.window = builder.get_object('main_window')
         self.stack = builder.get_object('main_stack')
 
+        # Menu buttons
+        self.test_auto = builder.get_object('test_auto')
+        self.test_touchscreen = builder.get_object('test_touchscreen')
+
         # Stack pages
         self.page_main = builder.get_object('page_main')
         self.page_progress = builder.get_object('page_progress')
+        self.page_touchscreen = builder.get_object('page_touchscreen')
 
         # Progress page
         self.progress_status = builder.get_object('progress_status')
         self.progress_bar = builder.get_object('progress_bar')
         self.progress_log = builder.get_object('progress_log')
+
+        # Touchscreen page
+        self.touchscreen_horisontal = builder.get_object('touchscreen_horisontal')
+        self.touchscreen_vertical = builder.get_object('touchscreen_vertical')
+
+        # Result storage
+        self.auto_result = []
 
         mess_with_permissions()
 
@@ -127,8 +163,12 @@ class Handler:
 
     def on_test_auto_clicked(self, *args):
         self.stack.set_visible_child(self.page_progress)
+        self.auto_result = []
         thread = AutoTests(self.autotests_update)
         thread.start()
+
+    def on_progress_back_clicked(self, *args):
+        self.stack.set_visible_child(self.page_main)
 
     def autotests_update(self, result):
         self.progress_status.set_text(result[0])
@@ -136,6 +176,7 @@ class Handler:
         self.progress_bar.set_fraction(fraction)
 
         update = result[2]
+        self.auto_result.append(update[1])
         if update is not None:
             ob = self.builder.get_object('result_' + update[0])
             if update[1]:
@@ -143,7 +184,18 @@ class Handler:
             else:
                 ob.set_text('failed')
 
+        if result[0] == "Done":
+            if False in self.auto_result:
+                self.test_auto.get_style_context().add_class('destructive-action')
+                self.test_auto.get_style_context().remove_class('suggested-action')
+            else:
+                self.test_auto.get_style_context().add_class('suggested-action')
+                self.test_auto.get_style_context().remove_class('destructive-action')
+
         self.page_progress.show_all()
+
+    def on_test_touchscreen_clicked(self, *args):
+        self.stack.set_visible_child(self.page_touchscreen)
 
 
 def main():
