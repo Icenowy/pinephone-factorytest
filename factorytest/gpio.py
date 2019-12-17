@@ -25,7 +25,7 @@ def gpio_direction(pin, direction):
         return
 
     with open(dirfile, 'w') as handle:
-        handle.write('{}}\n'.format(direction))
+        handle.write('{}\n'.format(direction))
 
 
 def gpio_export(pin):

@@ -1,5 +1,6 @@
 import subprocess
 import time
+import serial
 
 from factorytest.gpio import gpio, gpio_export, gpio_direction, gpio_set
 
@@ -9,8 +10,15 @@ def check_usb_exists(vid, pid):
     return '{}:{}'.format(vid, pid) in output
 
 
-def remove_gpio_security():
-    subprocess.check_output(['sudo', 'chmod', '-R', '777', '/sys/class/gpio'])
+def remove_gpio_security(pin=None):
+    path = '/sys/class/gpio'
+    if pin:
+        path = '/sys/class/gpio/gpio{}/'.format(pin)
+    subprocess.check_output(['sudo', 'chown', '-R', 'demo', path])
+
+
+def fix_tty_permissions():
+    subprocess.check_output(['sudo', 'chmod', '777', '/dev/ttyUSB2'])
 
 
 def try_poweron():
@@ -22,7 +30,7 @@ def try_poweron():
     power_button = gpio('PB3')
     for pin in [power_button, 68, 232]:
         gpio_export(pin)
-        remove_gpio_security()
+        remove_gpio_security(pin)
         gpio_direction(pin, 'out')
         gpio_set(pin, False)
 
@@ -40,11 +48,31 @@ def try_poweron():
     return False
 
 
+def test_sim():
+    port = serial.Serial("/dev/ttyUSB2", 115200, timeout=5)
+    port.write(b'AT+CIMI\r')
+
+    """Excepted response:
+    b'AT+CIMI\r\r\n'
+    b'204080510000000\r\n'
+    b'\r\n'
+    b'OK\r\n'
+    """
+
+    echo = port.readline().decode().strip()
+    imsi = port.readline().decode().strip()
+    port.readline()
+    status = port.readline().decode().strip()
+    return status == "OK" and int(imsi) > 1000
+
+
 def test_eg25():
     if not check_usb_exists('2c7c', '0125'):
         if not try_poweron():
             return False
-    # TODO: test all modem functionality
-    # - use AT command socket to check if sim is detected
-    # - use AT commands to check if networks are found
-    return check_usb_exists('2c7c', '0125')
+
+    fix_tty_permissions()
+    result = check_usb_exists('2c7c', '0125')
+    if not result:
+        return False
+    return test_sim()

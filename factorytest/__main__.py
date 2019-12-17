@@ -155,6 +155,8 @@ class Handler:
 
         # Result storage
         self.auto_result = []
+        self.touch_h = False
+        self.touch_v = False
 
         mess_with_permissions()
 
@@ -167,7 +169,7 @@ class Handler:
         thread = AutoTests(self.autotests_update)
         thread.start()
 
-    def on_progress_back_clicked(self, *args):
+    def on_back_clicked(self, *args):
         self.stack.set_visible_child(self.page_main)
 
     def autotests_update(self, result):
@@ -176,8 +178,8 @@ class Handler:
         self.progress_bar.set_fraction(fraction)
 
         update = result[2]
-        self.auto_result.append(update[1])
         if update is not None:
+            self.auto_result.append(update[1])
             ob = self.builder.get_object('result_' + update[0])
             if update[1]:
                 ob.set_text('OK')
@@ -196,6 +198,20 @@ class Handler:
 
     def on_test_touchscreen_clicked(self, *args):
         self.stack.set_visible_child(self.page_touchscreen)
+
+    def on_touchscreen_ah_value_changed(self, adjustment):
+        if adjustment.get_value() > 95.0:
+            self.touch_h = True
+
+        if self.touch_h and self.touch_v:
+            self.test_touchscreen.get_style_context().add_class('suggested-action')
+
+    def on_touchscreen_av_value_changed(self, adjustment):
+        if adjustment.get_value() == 100.0:
+            self.touch_v = True
+
+        if self.touch_h and self.touch_v:
+            self.test_touchscreen.get_style_context().add_class('suggested-action')
 
 
 def main():

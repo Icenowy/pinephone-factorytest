@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='factorytest_pinephone',
-    version='0.6.0',
+    version='0.8.0',
     packages=['factorytest'],
     url='https://gitlab.com/MartijnBraam/factorytest',
     license='MIT',
@@ -17,7 +17,8 @@ setup(
     ],
     install_requires=[
         'wifi',
-        'smbus'
+        'smbus',
+        'pyserial'
     ],
     zip_safe=True,
     include_package_data=True,
