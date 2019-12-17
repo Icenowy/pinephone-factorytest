@@ -1,4 +1,12 @@
 import os
+import subprocess
+
+
+def remove_gpio_security(pin=None):
+    path = '/sys/class/gpio'
+    if pin:
+        path = '/sys/class/gpio/gpio{}/'.format(pin)
+    subprocess.check_output(['sudo', 'chown', '-R', 'demo', path])
 
 
 def gpio(name):

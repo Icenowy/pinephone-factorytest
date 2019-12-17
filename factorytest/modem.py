@@ -2,19 +2,12 @@ import subprocess
 import time
 import serial
 
-from factorytest.gpio import gpio, gpio_export, gpio_direction, gpio_set
+from factorytest.gpio import gpio, gpio_export, gpio_direction, gpio_set, remove_gpio_security
 
 
 def check_usb_exists(vid, pid):
     output = subprocess.check_output(['lsusb'], universal_newlines=True)
     return '{}:{}'.format(vid, pid) in output
-
-
-def remove_gpio_security(pin=None):
-    path = '/sys/class/gpio'
-    if pin:
-        path = '/sys/class/gpio/gpio{}/'.format(pin)
-    subprocess.check_output(['sudo', 'chown', '-R', 'demo', path])
 
 
 def fix_tty_permissions():

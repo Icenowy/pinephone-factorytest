@@ -1,6 +1,6 @@
 import time
 import smbus
-from factorytest.gpio import gpio, gpio_set, gpio_export, gpio_direction
+from factorytest.gpio import gpio, gpio_set, gpio_export, gpio_direction, remove_gpio_security
 
 
 def set_camera_power(state):
@@ -35,12 +35,12 @@ def set_camera_power(state):
         raise Exception('Invalid camera power state {}'.format(state))
 
 
-def check_ov5640(bus=2, address=0x1e):
+def check_ov5640(bus=2, address=0x3c):
     set_camera_power('rear')
     set_camera_power('off')
 
 
-def check_gc(bus=2, address=0x1e):
+def check_gc(bus=2, address=0x3c):
     set_camera_power('front')
     bus = smbus.SMBus(bus)
 
