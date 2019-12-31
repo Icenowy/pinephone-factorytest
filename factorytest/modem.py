@@ -41,6 +41,17 @@ def try_poweron():
     return False
 
 
+def get_att_data(command):
+    port = serial.Serial("/dev/ttyUSB2", 115200, timeout=5)
+    port.write(command + b'\r')
+
+    echo = port.readline().decode().strip()
+    response = port.readline().decode().strip()
+    port.readline()
+    status = port.readline().decode().strip()
+    return status, response
+
+
 def test_sim():
     port = serial.Serial("/dev/ttyUSB2", 115200, timeout=5)
     port.write(b'AT+CIMI\r')
@@ -58,6 +69,47 @@ def test_sim():
     status = port.readline().decode().strip()
     return status == "OK" and int(imsi) > 1000
 
+
+def get_firmware():
+    return get_att_data(b'AT+GMR')
+
+
+def get_imei():
+    return get_att_data(b'AT+GSN')
+
+
+def get_imsi():
+    return get_att_data(b'AT+CIMI')
+
+
+def get_signal():
+    status, raw = get_att_data(b'AT+CSQ')
+    if status != "OK":
+        return None
+    raw = raw.replace("+CSQ: ", "")
+    raw = raw.strip()
+    rssi, ber = raw.split(',')
+    rssi = int(rssi.strip())
+    ber = int(ber.strip())
+
+    if rssi < 32:
+        dbm = 113 - (2 * rssi)
+        rssi = '-{}dBm'.format(dbm)
+    elif rssi == 99:
+        rssi = "Unknown"
+    elif rssi > 99 and rssi < 192:
+        dbm = 116 - (rssi - 100)
+        rssi = "-{}dBm".format(dbm)
+    elif rssi == 199:
+        rssi = "Unknown"
+    return rssi, ber
+
+def get_network():
+    status, raw = get_att_data(b'AT+QNWINFO')
+    if status != "OK":
+        return None
+    raw = raw.replace("+QNWINFO: ", "")
+    return raw
 
 def test_eg25():
     if not check_usb_exists('2c7c', '0125'):

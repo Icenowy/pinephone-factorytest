@@ -105,6 +105,51 @@ class AutoTests(threading.Thread):
         return False
 
 
+class ModemInfo:
+    def __init__(self):
+        self.status = None
+        self.registration = None
+        self.imei = None
+        self.signal = None
+        self.network = None
+        self.firmware = None
+        self.sim_status = None
+        self.imsi = None
+
+
+class ModemTests(threading.Thread):
+    def __init__(self, callback):
+        threading.Thread.__init__(self)
+        self.callback = callback
+
+    def run(self):
+        result = ModemInfo()
+        result.status = "Booting"
+        if not modem.check_usb_exists('2c7c', '0125'):
+            GLib.idle_add(self.callback, result)
+            if modem.try_poweron():
+                result.status = "Idle"
+            else:
+                result.status = "Boot timeout"
+            GLib.idle_add(self.callback, result)
+
+        modem.fix_tty_permissions()
+
+        _, result.imei = modem.get_imei()
+        _, result.firmware = modem.get_firmware()
+        result.network = modem.get_network()
+        signal = modem.get_signal()
+        if signal is not None:
+            result.signal = "{} ({} Rxqual)".format(signal[0], signal[1])
+
+        status, imsi = modem.get_imsi()
+        if status == "ok":
+            result.imsi = imsi
+            result.sim_status = "Connected"
+        else:
+            result.sim_status = "No sim"
+
+
 class FactoryTestApplication(Gtk.Application):
     def __init__(self, application_id, flags):
         Gtk.Application.__init__(self, application_id=application_id, flags=flags)
@@ -138,11 +183,15 @@ class Handler:
         # Menu buttons
         self.test_auto = builder.get_object('test_auto')
         self.test_touchscreen = builder.get_object('test_touchscreen')
+        self.test_earpiece = builder.get_object('test_earpiece')
+        self.test_modem = builder.get_object('test_modem')
 
         # Stack pages
         self.page_main = builder.get_object('page_main')
         self.page_progress = builder.get_object('page_progress')
         self.page_touchscreen = builder.get_object('page_touchscreen')
+        self.page_yesno = builder.get_object('page_yesno')
+        self.page_modem = builder.get_object('page_modem')
 
         # Progress page
         self.progress_status = builder.get_object('progress_status')
@@ -153,10 +202,25 @@ class Handler:
         self.touchscreen_horisontal = builder.get_object('touchscreen_horisontal')
         self.touchscreen_vertical = builder.get_object('touchscreen_vertical')
 
+        # Yes/no page
+        self.yesno_label = builder.get_object('yesno_label')
+        self.yesno_yes = builder.get_object('yesno_yes')
+        self.yesno_no = builder.get_object('yesno_no')
+
+        # Modem page
+        self.modem_status = builder.get_object('modem_status')
+        self.modem_registration = builder.get_object('modem_registration')
+        self.modem_imei = builder.get_object('modem_imei')
+        self.modem_firmware = builder.get_object('modem_firmware')
+        self.modem_network = builder.get_object('modem_network')
+        self.modem_signal = builder.get_object('modem_signal')
+        self.modem_sim_status = builder.get_object('modem_sim_status')
+        self.modem_sim_imsi = builder.get_object('modem_sim_imsi')
+
         # Result storage
         self.auto_result = []
-        self.touch_h = False
-        self.touch_v = False
+        self.tstest_clicked = set()
+        self.yesno_button = None
 
         mess_with_permissions()
 
@@ -167,6 +231,11 @@ class Handler:
         self.stack.set_visible_child(self.page_progress)
         self.auto_result = []
         thread = AutoTests(self.autotests_update)
+        thread.start()
+
+    def on_test_modem_clicked(self, *args):
+        self.stack.set_visible_child(self.page_modem)
+        thread = ModemTests(self.modemtests_update)
         thread.start()
 
     def on_back_clicked(self, *args):
@@ -196,22 +265,51 @@ class Handler:
 
         self.page_progress.show_all()
 
+    def modemtests_update(self, result):
+        """
+        :type result: ModemInfo
+        """
+        self.modem_status.set_text(result.status if result.status is not None else "...")
+        self.modem_registration.set_text(result.registration if result.registration is not None else "...")
+        self.modem_imei.set_text(result.imei if result.imei is not None else "...")
+        self.modem_firmware.set_text(result.firmware if result.firmware is not None else "...")
+        self.modem_network.set_text(result.network if result.network is not None else "...")
+        self.modem_signal.set_text(result.signal if result.signal is not None else "...")
+        self.modem_sim_status.set_text(result.sim_status if result.sim_status is not None else "...")
+        self.modem_sim_imsi.set_text(result.imsi if result.imsi is not None else "...")
+        self.page_modem.show_all()
+
     def on_test_touchscreen_clicked(self, *args):
         self.stack.set_visible_child(self.page_touchscreen)
 
-    def on_touchscreen_ah_value_changed(self, adjustment):
-        if adjustment.get_value() > 95.0:
-            self.touch_h = True
-
-        if self.touch_h and self.touch_v:
+    def on_tstest_click(self, button):
+        self.tstest_clicked.add(button)
+        button.get_style_context().add_class('suggested-action')
+        if len(self.tstest_clicked) == 12:
             self.test_touchscreen.get_style_context().add_class('suggested-action')
 
-    def on_touchscreen_av_value_changed(self, adjustment):
-        if adjustment.get_value() == 100.0:
-            self.touch_v = True
+    def run_yesno(self, button, question):
+        self.yesno_button = button
+        self.yesno_label.set_text(question)
+        self.page_yesno.show_all()
+        self.stack.set_visible_child(self.page_yesno)
 
-        if self.touch_h and self.touch_v:
-            self.test_touchscreen.get_style_context().add_class('suggested-action')
+    def on_yesno_yes_clicked(self, *args):
+        button = self.builder.get_object('test_{}'.format(self.yesno_button))
+        button.get_style_context().add_class('suggested-action')
+        button.get_style_context().remove_class('destructive-action')
+        self.page_main.show_all()
+        self.stack.set_visible_child(self.page_main)
+
+    def on_yesno_no_clicked(self, *args):
+        button = self.builder.get_object('test_{}'.format(self.yesno_button))
+        button.get_style_context().add_class('destructive-action')
+        button.get_style_context().remove_class('suggested-action')
+        self.page_main.show_all()
+        self.stack.set_visible_child(self.page_main)
+
+    def on_test_earpiece_clicked(self, *args):
+        self.run_yesno('earpiece', 'Does sound come out of the earpiece?')
 
 
 def main():
