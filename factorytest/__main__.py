@@ -121,10 +121,13 @@ class ModemTests(threading.Thread):
     def __init__(self, callback):
         threading.Thread.__init__(self)
         self.callback = callback
+        self.running = True
 
     def run(self):
+        print("Started modem test")
         result = ModemInfo()
         result.status = "Booting"
+        GLib.idle_add(self.callback, result)
         if not modem.check_usb_exists('2c7c', '0125'):
             GLib.idle_add(self.callback, result)
             if modem.try_poweron():
@@ -134,20 +137,22 @@ class ModemTests(threading.Thread):
             GLib.idle_add(self.callback, result)
 
         modem.fix_tty_permissions()
+        while self.running:
+            _, result.imei = modem.get_imei()
+            _, result.firmware = modem.get_firmware()
+            result.network = modem.get_network()
+            signal = modem.get_signal()
+            if signal is not None:
+                result.signal = "{} ({} Rxqual)".format(signal[0], signal[1])
 
-        _, result.imei = modem.get_imei()
-        _, result.firmware = modem.get_firmware()
-        result.network = modem.get_network()
-        signal = modem.get_signal()
-        if signal is not None:
-            result.signal = "{} ({} Rxqual)".format(signal[0], signal[1])
-
-        status, imsi = modem.get_imsi()
-        if status == "ok":
-            result.imsi = imsi
-            result.sim_status = "Connected"
-        else:
-            result.sim_status = "No sim"
+            status, imsi = modem.get_imsi()
+            if status == "ok":
+                result.imsi = imsi
+                result.sim_status = "Connected"
+            else:
+                result.sim_status = "No sim"
+            GLib.idle_add(self.callback, result)
+            time.sleep(1)
 
 
 class FactoryTestApplication(Gtk.Application):
@@ -269,6 +274,7 @@ class Handler:
         """
         :type result: ModemInfo
         """
+        print("Got modem update!")
         self.modem_status.set_text(result.status if result.status is not None else "...")
         self.modem_registration.set_text(result.registration if result.registration is not None else "...")
         self.modem_imei.set_text(result.imei if result.imei is not None else "...")
@@ -313,6 +319,7 @@ class Handler:
 
 
 def main():
+    print("Starting factorytest")
     app = FactoryTestApplication("org.pine64.pinephone.factorytest", Gio.ApplicationFlags.FLAGS_NONE)
     app.run()
 
