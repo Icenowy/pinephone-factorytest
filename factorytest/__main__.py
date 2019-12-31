@@ -137,23 +137,27 @@ class ModemTests(threading.Thread):
             GLib.idle_add(self.callback, result)
 
         modem.fix_tty_permissions()
-        while self.running:
-            _, result.imei = modem.get_imei()
-            _, result.firmware = modem.get_firmware()
-            result.network = modem.get_network()
-            signal = modem.get_signal()
-            result.registration = modem.get_operator()
-            if signal is not None:
-                result.signal = "{} ({} Rxqual)".format(signal[0], signal[1])
 
-            status, imsi = modem.get_imsi()
-            if status == "OK":
-                result.imsi = imsi
-                result.sim_status = "Connected"
+        result.status = "OK"
+        time.sleep(3)
+        _, result.imei = modem.get_imei()
+        _, result.firmware = modem.get_firmware()
+        result.network = modem.get_network()
+        signal = modem.get_signal()
+        result.registration = modem.get_operator()
+        if signal is not None:
+            if signal[1] < 99:
+                result.signal = "{} ({} Rxqual)".format(signal[0], signal[1])
             else:
-                result.sim_status = "No sim"
-            GLib.idle_add(self.callback, result)
-            time.sleep(1)
+                result.signal = signal[0]
+
+        status, imsi = modem.get_imsi()
+        if status == "OK":
+            result.imsi = imsi
+            result.sim_status = "Connected"
+        else:
+            result.sim_status = "No sim"
+        GLib.idle_add(self.callback, result)
 
 
 class FactoryTestApplication(Gtk.Application):
@@ -227,6 +231,8 @@ class Handler:
         self.auto_result = []
         self.tstest_clicked = set()
         self.yesno_button = None
+        self.modem_hide_ids = False
+        self.modem_last = None
 
         mess_with_permissions()
 
@@ -278,13 +284,24 @@ class Handler:
         print("Got modem update!")
         self.modem_status.set_text(result.status if result.status is not None else "...")
         self.modem_registration.set_text(result.registration if result.registration is not None else "...")
-        self.modem_imei.set_text(result.imei if result.imei is not None else "...")
+        if self.modem_hide_ids is True:
+            self.modem_imei.set_text("[Hidden]")
+        else:
+            self.modem_imei.set_text(result.imei if result.imei is not None else "...")
         self.modem_firmware.set_text(result.firmware if result.firmware is not None else "...")
         self.modem_network.set_text(result.network if result.network is not None else "...")
         self.modem_signal.set_text(result.signal if result.signal is not None else "...")
         self.modem_sim_status.set_text(result.sim_status if result.sim_status is not None else "...")
-        self.modem_sim_imsi.set_text(result.imsi if result.imsi is not None else "...")
+        if self.modem_hide_ids is True:
+            self.modem_sim_imsi.set_text("[Hidden]")
+        else:
+            self.modem_sim_imsi.set_text(result.imsi if result.imsi is not None else "...")
         self.page_modem.show_all()
+        self.modem_last = result
+
+    def on_modem_hide_ids_toggled(self, button):
+        self.modem_hide_ids = button.get_active()
+        self.modemtests_update(self.modem_last)
 
     def on_test_touchscreen_clicked(self, *args):
         self.stack.set_visible_child(self.page_touchscreen)
