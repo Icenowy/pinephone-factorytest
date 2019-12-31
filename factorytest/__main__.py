@@ -142,11 +142,12 @@ class ModemTests(threading.Thread):
             _, result.firmware = modem.get_firmware()
             result.network = modem.get_network()
             signal = modem.get_signal()
+            result.registration = modem.get_operator()
             if signal is not None:
                 result.signal = "{} ({} Rxqual)".format(signal[0], signal[1])
 
             status, imsi = modem.get_imsi()
-            if status == "ok":
+            if status == "OK":
                 result.imsi = imsi
                 result.sim_status = "Connected"
             else:

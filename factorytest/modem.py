@@ -104,12 +104,26 @@ def get_signal():
         rssi = "Unknown"
     return rssi, ber
 
+
 def get_network():
     status, raw = get_att_data(b'AT+QNWINFO')
     if status != "OK":
         return None
     raw = raw.replace("+QNWINFO: ", "")
     return raw
+
+
+def get_operator():
+    try:
+        status, raw = get_att_data(b'AT+QSPN')
+        if status != "OK":
+            return None
+        raw = raw.replace("+QSPN: ", "")
+        fnn, snn, spn, alphabet, rplmn = raw.split(',')
+        return fnn.strip().replace('"', '')
+    except:
+        return "???"
+
 
 def test_eg25():
     if not check_usb_exists('2c7c', '0125'):

@@ -12,3 +12,4 @@ Current tests
 * GC2145, test exists but does nothing
 * touchscreen test
 * Earpiece test WIP
+* Modem status page
