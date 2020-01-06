@@ -19,6 +19,12 @@ from wifi import Cell, Scheme
 # For camera tests
 import factorytest.camera as camera
 
+# For audio tests
+import factorytest.audio as audio
+
+# For led tests
+import factorytest.led as led
+
 try:
     import importlib.resources as pkg_resources
 except ImportError:
@@ -115,6 +121,9 @@ class ModemInfo:
         self.firmware = None
         self.sim_status = None
         self.imsi = None
+        self.call_status = None
+        self.call_technology = None
+        self.call_number = None
 
 
 class ModemTests(threading.Thread):
@@ -126,7 +135,7 @@ class ModemTests(threading.Thread):
     def run(self):
         print("Started modem test")
         result = ModemInfo()
-        result.status = "Booting"
+        result.status = "Waiting for modem"
         GLib.idle_add(self.callback, result)
         if not modem.check_usb_exists('2c7c', '0125'):
             GLib.idle_add(self.callback, result)
@@ -138,11 +147,14 @@ class ModemTests(threading.Thread):
 
         modem.fix_tty_permissions()
 
-        result.status = "OK"
+        result.status = "Connected to modem, loading info"
         time.sleep(3)
         _, result.imei = modem.get_imei()
+        GLib.idle_add(self.callback, result)
         _, result.firmware = modem.get_firmware()
+        GLib.idle_add(self.callback, result)
         result.network = modem.get_network()
+        GLib.idle_add(self.callback, result)
         signal = modem.get_signal()
         result.registration = modem.get_operator()
         if signal is not None:
@@ -150,14 +162,44 @@ class ModemTests(threading.Thread):
                 result.signal = "{} ({} Rxqual)".format(signal[0], signal[1])
             else:
                 result.signal = signal[0]
-
+        GLib.idle_add(self.callback, result)
         status, imsi = modem.get_imsi()
         if status == "OK":
             result.imsi = imsi
             result.sim_status = "Connected"
         else:
             result.sim_status = "No sim"
+        result.status = "OK"
         GLib.idle_add(self.callback, result)
+
+        modem.set_auto_answer()
+        result.call_status = 'Ready for call'
+        had_call = False
+        while self.running:
+            call = modem.get_call_info()
+            result.network = modem.get_network()
+            signal = modem.get_signal()
+            result.registration = modem.get_operator()
+            if signal is not None:
+                if signal[1] < 99:
+                    result.signal = "{} ({} Rxqual)".format(signal[0], signal[1])
+                else:
+                    result.signal = signal[0]
+
+            if call is not None:
+                result.call_status = "{} ({})".format(call['direction'], call['state'])
+                result.call_technology = call['mode']
+                result.call_number = call['number']
+                GLib.idle_add(self.callback, result)
+                if not had_call:
+                    had_call = True
+                    modem.do_dtmf(result.call_number)
+            else:
+                result.call_status = 'Ready for call'
+                result.call_technology = None
+                result.call_number = None
+                GLib.idle_add(self.callback, result)
+            time.sleep(1)
 
 
 class FactoryTestApplication(Gtk.Application):
@@ -226,6 +268,9 @@ class Handler:
         self.modem_signal = builder.get_object('modem_signal')
         self.modem_sim_status = builder.get_object('modem_sim_status')
         self.modem_sim_imsi = builder.get_object('modem_sim_imsi')
+        self.modem_call_status = builder.get_object('modem_call_status')
+        self.modem_call_technology = builder.get_object('modem_call_technology')
+        self.modem_call_number = builder.get_object('modem_call_number')
 
         # Result storage
         self.auto_result = []
@@ -291,11 +336,20 @@ class Handler:
         self.modem_firmware.set_text(result.firmware if result.firmware is not None else "...")
         self.modem_network.set_text(result.network if result.network is not None else "...")
         self.modem_signal.set_text(result.signal if result.signal is not None else "...")
+
         self.modem_sim_status.set_text(result.sim_status if result.sim_status is not None else "...")
         if self.modem_hide_ids is True:
             self.modem_sim_imsi.set_text("[Hidden]")
         else:
             self.modem_sim_imsi.set_text(result.imsi if result.imsi is not None else "...")
+
+        self.modem_call_status.set_text(result.call_status if result.call_status is not None else "...")
+        self.modem_call_technology.set_text(result.call_technology if result.call_technology is not None else "...")
+        if self.modem_hide_ids is True:
+            self.modem_call_number.set_text("[Hidden]")
+        else:
+            self.modem_call_number.set_text(result.call_number if result.call_number is not None else "...")
+
         self.page_modem.show_all()
         self.modem_last = result
 
@@ -334,6 +388,20 @@ class Handler:
 
     def on_test_earpiece_clicked(self, *args):
         self.run_yesno('earpiece', 'Does sound come out of the earpiece?')
+        audio.test_earpiece()
+
+    def on_test_headphone_clicked(self, *args):
+        self.run_yesno('headphone', 'Does sound come out of the headphones?')
+        audio.test_headphones()
+
+    def on_test_speaker_clicked(self, *args):
+        self.run_yesno('speaker', 'Does sound come out of the speaker?')
+        audio.test_speaker()
+
+    def on_test_rgb_clicked(self, *args):
+        self.run_yesno('rgb', 'Does the notification led light red,green,blue,white?')
+        led.fix_led_permissions()
+        led.test_notification_led()
 
 
 def main():

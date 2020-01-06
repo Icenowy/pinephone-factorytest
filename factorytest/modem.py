@@ -1,8 +1,15 @@
 import subprocess
 import time
 import serial
-
+import logging
 from factorytest.gpio import gpio, gpio_export, gpio_direction, gpio_set, remove_gpio_security
+
+port = None
+logger = logging.getLogger("modem")
+logger.setLevel(logging.DEBUG)
+fh = logging.FileHandler("/tmp/modem.log")
+fh.setLevel(logging.DEBUG)
+logger.addHandler(fh)
 
 
 def check_usb_exists(vid, pid):
@@ -11,11 +18,13 @@ def check_usb_exists(vid, pid):
 
 
 def fix_tty_permissions():
+    logger.debug("fix_tty_permissions")
     subprocess.check_output(['sudo', 'chmod', '777', '/dev/ttyUSB2'])
 
 
 def try_poweron():
     """ Do the power trigger required by the 1.0 kits """
+    global port
     print("Using devkit 1.0 procedure to boot the modem")
 
     remove_gpio_security()
@@ -36,37 +45,47 @@ def try_poweron():
     for i in range(0, 60):
         if check_usb_exists('2c7c', '0125'):
             print("Booted in {} seconds".format(i))
+            port = serial.Serial("/dev/ttyUSB2", 115200, timeout=5)
             return True
         time.sleep(1)
     return False
 
 
-def get_att_data(command):
-    port = serial.Serial("/dev/ttyUSB2", 115200, timeout=5)
+def get_att_data(command, multiline=False):
+    global port
+    if port is None:
+        port = serial.Serial("/dev/ttyUSB2", 115200, timeout=5)
+    logger.debug("> {}".format(command.decode()))
     port.write(command + b'\r')
 
     echo = port.readline().decode().strip()
-    response = port.readline().decode().strip()
-    port.readline()
-    status = port.readline().decode().strip()
+    if multiline:
+        response = []
+        while True:
+            raw = port.readline().decode().strip()
+            logger.debug("< {}".format(raw))
+            if "ERROR" in raw:
+                status = "ERROR"
+                break
+            if raw == "OK":
+                status = "OK"
+                break
+            if raw == "RING":
+                continue
+            if raw == command.decode():
+                continue
+            if len(raw) > 0:
+                response.append(raw)
+    else:
+        response = port.readline().decode().strip()
+        logger.debug("< {}".format(response))
+        port.readline()
+        status = port.readline().decode().strip()
     return status, response
 
 
 def test_sim():
-    port = serial.Serial("/dev/ttyUSB2", 115200, timeout=5)
-    port.write(b'AT+CIMI\r')
-
-    """Excepted response:
-    b'AT+CIMI\r\r\n'
-    b'204080510000000\r\n'
-    b'\r\n'
-    b'OK\r\n'
-    """
-
-    echo = port.readline().decode().strip()
-    imsi = port.readline().decode().strip()
-    port.readline()
-    status = port.readline().decode().strip()
+    status, imsi = get_imsi()
     return status == "OK" and int(imsi) > 1000
 
 
@@ -117,12 +136,50 @@ def get_operator():
     try:
         status, raw = get_att_data(b'AT+QSPN')
         if status != "OK":
-            return None
+            return "Not registered"
         raw = raw.replace("+QSPN: ", "")
         fnn, snn, spn, alphabet, rplmn = raw.split(',')
         return fnn.strip().replace('"', '')
     except:
         return "???"
+
+
+def set_auto_answer():
+    get_att_data(b'ATS0=1')
+
+
+def get_call_info():
+    # Get call info
+    status, raw = get_att_data(b'AT+CLCC', multiline=True)
+    if len(raw) < 2:
+        return None
+
+    # For some reason the first call listed is a dummy
+    raw = raw[1]  # assumptions, assumptions
+    part = raw.replace("+CLCC: ", "").split(",")
+
+    direction = "incoming" if part[1] == "1" else "outgoing"
+    states = {
+        "0": "active",
+        "1": "held",
+        "2": "dialing",
+        "3": "alerting",
+        "4": "incoming",
+        "5": "waiting"
+    }
+    state = states[part[2]]
+    mode = "VoLTE" if part[3] == "1" else "Fallback"
+    number = part[5].replace('"', "").strip()
+    return {
+        "direction": direction,
+        "state": state,
+        "mode": mode,
+        "number": number
+    }
+
+
+def do_dtmf(numbers):
+    get_att_data(b'AT+VTS="' + str(numbers).encode() + b'"')
 
 
 def test_eg25():

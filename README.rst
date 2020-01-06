@@ -11,5 +11,9 @@ Current tests
 * OV5640, test exists but does nothing
 * GC2145, test exists but does nothing
 * touchscreen test
-* Earpiece test WIP
+* Earpiece test
+* Speaker test
+* Headphone test
 * Modem status page
+* Incoming call status
+* RGB notification led test
