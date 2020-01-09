@@ -27,5 +27,5 @@ def test_headphones():
 
 def test_speaker():
     set_sound_device('Speaker')
-    set_volume('Line Out', '80%')
+    set_volume('Line Out', '100%')
     speaker_test(1)

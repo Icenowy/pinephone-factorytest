@@ -1,11 +1,15 @@
+import io
+import math
 import subprocess
 import threading
 import time
+from io import SEEK_END
 
 import gi
 import logging
 import glob
 import os
+import re
 
 # For chip self-tests
 import factorytest.selftest as selftest
@@ -24,6 +28,7 @@ import factorytest.audio as audio
 
 # For led tests
 import factorytest.led as led
+from factorytest import motor
 
 try:
     import importlib.resources as pkg_resources
@@ -193,13 +198,40 @@ class ModemTests(threading.Thread):
                 GLib.idle_add(self.callback, result)
                 if not had_call:
                     had_call = True
-                    modem.do_dtmf(result.call_number)
+                    modem.do_dtmf(result.call_number.replace("+", ""))
             else:
                 result.call_status = 'Ready for call'
                 result.call_technology = None
                 result.call_number = None
                 GLib.idle_add(self.callback, result)
             time.sleep(1)
+
+
+class Flasher(threading.Thread):
+    def __init__(self, callback):
+        threading.Thread.__init__(self)
+        self.callback = callback
+
+    def run(self):
+        print("Started flashing procedure")
+        GLib.idle_add(self.callback, ['Starting flasher', 0.0])
+        subprocess.run(['sudo', 'chmod', '777', '/dev/mmcblk0'])
+        subprocess.run(['sudo', 'chmod', '777', '/dev/mmcblk2'])
+        done = 0
+        blocksize = 1024 * 5  # 5MB blocks
+        with open('/dev/mmcblk0', 'rb') as sd:
+            size = sd.seek(0, io.SEEK_END)
+            sd.seek(0, 0)
+            blocks = math.ceil(size / blocksize)
+            with open('/dev/mmcblk2', 'wb') as emmc:
+                while True:
+                    block = sd.read(blocksize)
+                    if block is None:
+                        break
+                    emmc.write(block)
+                    done += 1
+                    GLib.idle_add(self.callback, ['Writing image', done / blocks])
+        GLib.idle_add(self.callback, ['Flashing complete!', 100.0])
 
 
 class FactoryTestApplication(Gtk.Application):
@@ -244,6 +276,7 @@ class Handler:
         self.page_touchscreen = builder.get_object('page_touchscreen')
         self.page_yesno = builder.get_object('page_yesno')
         self.page_modem = builder.get_object('page_modem')
+        self.page_flasher = builder.get_object('page_flasher')
 
         # Progress page
         self.progress_status = builder.get_object('progress_status')
@@ -272,6 +305,10 @@ class Handler:
         self.modem_call_technology = builder.get_object('modem_call_technology')
         self.modem_call_number = builder.get_object('modem_call_number')
 
+        # Flasher page
+        self.flasher_status = builder.get_object('flasher_status')
+        self.flasher_progress = builder.get_object('flasher_progress')
+
         # Result storage
         self.auto_result = []
         self.tstest_clicked = set()
@@ -294,6 +331,9 @@ class Handler:
         self.stack.set_visible_child(self.page_modem)
         thread = ModemTests(self.modemtests_update)
         thread.start()
+
+    def on_flash_emmc_clicked(self, button):
+        self.stack.set_visible_child(self.page_flasher)
 
     def on_back_clicked(self, *args):
         self.stack.set_visible_child(self.page_main)
@@ -402,6 +442,21 @@ class Handler:
         self.run_yesno('rgb', 'Does the notification led light red,green,blue,white?')
         led.fix_led_permissions()
         led.test_notification_led()
+
+    def on_test_motor_clicked(self, *args):
+        self.run_yesno('motor', 'Does vibration motor work?')
+        motor.test_motor()
+
+
+    def on_flasher_button_clicked(self, button):
+        button.set_sensitive(False)
+        thread = Flasher(self.on_flasher_update)
+        thread.start()
+
+    def on_flasher_update(self, progress):
+        status, progress = progress
+        self.flasher_status.set_text(status)
+        self.flasher_progress.set_fraction(progress)
 
 
 def main():
