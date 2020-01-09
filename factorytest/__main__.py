@@ -447,7 +447,6 @@ class Handler:
         self.run_yesno('motor', 'Does vibration motor work?')
         motor.test_motor()
 
-
     def on_flasher_button_clicked(self, button):
         button.set_sensitive(False)
         thread = Flasher(self.on_flasher_update)

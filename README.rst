@@ -17,3 +17,4 @@ Current tests
 * Modem status page
 * Incoming call status
 * RGB notification led test
+* Vibration motor test
