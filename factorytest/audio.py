@@ -9,8 +9,8 @@ def set_volume(control, level):
     subprocess.run(['amixer', 'set', control, level])
 
 
-def speaker_test(channels=1):
-    subprocess.run(['speaker-test', '-c', str(channels), '-t', 'wav', '-s', '1'])
+def speaker_test(channels=1, loops=4):
+    subprocess.run(['speaker-test', '-c', str(channels), '-t', 'wav', '-s', '1', '-l', str(loops)])
 
 
 def test_earpiece():
