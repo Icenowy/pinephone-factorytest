@@ -1,4 +1,5 @@
 import fcntl
+import time
 from glob import glob
 import array
 import os
@@ -55,6 +56,7 @@ def test_motor():
     with open(device, 'w') as handle:
         effect = upload_rumble(handle)
         play_effect(handle, effect)
+        time.sleep(5)
 
 
 if __name__ == '__main__':
