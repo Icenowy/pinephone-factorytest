@@ -227,10 +227,10 @@ class Flasher(threading.Thread):
         subprocess.run(['sudo', 'chmod', '777', '/dev/mmcblk0'])
         subprocess.run(['sudo', 'chmod', '777', '/dev/mmcblk2'])
         done = 0
-        blocksize = 1024 * 5  # 5MB blocks
+        blocksize = 1024 * 1024  # 1MB blocks
+        blocks_max = 2048  # Image is smaller than 2GB
         with open('/dev/mmcblk0', 'rb') as sd:
-            size = sd.seek(0, io.SEEK_END)
-            sd.seek(0, 0)
+            size = blocksize * blocks_max
             blocks = math.ceil(size / blocksize)
             with open('/dev/mmcblk2', 'wb') as emmc:
                 while True:
