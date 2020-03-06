@@ -92,11 +92,11 @@ class AutoTests(threading.Thread):
         GLib.idle_add(self.callback, ['Testing OV5640', 5, ('modem', result)])
 
         # Rear camera
-        result = True
+        result = camera.check_ov5640()
         GLib.idle_add(self.callback, ['Testing GC2145', 6, ('rearcam', result)])
 
         # Front camera
-        result = True
+        result = "Skipped"
         GLib.idle_add(self.callback, ['Done', 7, ('frontcam', result)])
 
     def test_sensor(self, name, attribute):
@@ -389,15 +389,19 @@ class Handler:
 
         update = result[2]
         if update is not None:
-            self.auto_result.append(update[1])
             ob = self.builder.get_object('result_' + update[0])
-            if update[1]:
+            if update[1] is True:
                 ob.set_text('OK')
-            else:
+            elif update[1] is False:
+                self.auto_result.append(update[1])
                 ob.set_text('failed')
+            else:
+                if update[1] != "Skipped":
+                    self.auto_result.append(update[1])
+                ob.set_text(update[1])
 
         if result[0] == "Done":
-            if False in self.auto_result:
+            if len(self.auto_result) > 0:
                 self.test_auto.get_style_context().add_class('destructive-action')
                 self.test_auto.get_style_context().remove_class('suggested-action')
             else:
@@ -473,13 +477,25 @@ class Handler:
     def on_test_earpiece_clicked(self, *args):
         self.run_yesno('earpiece', 'Does sound come out of the earpiece?')
         audio.test_earpiece()
+        audio.test_earpiece()
+        audio.test_earpiece()
+        audio.test_earpiece()
+        audio.test_earpiece()
 
     def on_test_headphone_clicked(self, *args):
         self.run_yesno('headphone', 'Does sound come out of the headphones?')
         audio.test_headphones()
+        audio.test_headphones()
+        audio.test_headphones()
+        audio.test_headphones()
+        audio.test_headphones()
 
     def on_test_speaker_clicked(self, *args):
         self.run_yesno('speaker', 'Does sound come out of the speaker?')
+        audio.test_speaker()
+        audio.test_speaker()
+        audio.test_speaker()
+        audio.test_speaker()
         audio.test_speaker()
 
     def on_test_rgb_clicked(self, *args):

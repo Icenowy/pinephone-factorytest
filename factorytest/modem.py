@@ -185,10 +185,13 @@ def do_dtmf(numbers):
 def test_eg25():
     if not check_usb_exists('2c7c', '0125'):
         if not try_poweron():
-            return False
+            return "No modem"
 
     fix_tty_permissions()
     result = check_usb_exists('2c7c', '0125')
     if not result:
-        return False
-    return test_sim()
+        return "No modem comm"
+    if test_sim():
+        return True
+    else:
+        return "No sim"
