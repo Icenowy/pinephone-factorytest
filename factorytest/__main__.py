@@ -235,12 +235,14 @@ class Flasher(threading.Thread):
             with open('/dev/mmcblk2', 'wb') as emmc:
                 while True:
                     block = sd.read(blocksize)
-                    if block is None:
+                    if block is None or len(block) == 0:
                         break
                     emmc.write(block)
                     done += 1
-                    GLib.idle_add(self.callback, ['Writing image', done / blocks])
-        GLib.idle_add(self.callback, ['Flashing complete!', 100.0])
+                    GLib.idle_add(self.callback, ['Writing {}'.format(label), done / blocks])
+        GLib.idle_add(self.callback, ['Purging caches...', 1.0])
+        subprocess.run(['sudo', 'sync'])
+        GLib.idle_add(self.callback, ['Flashing complete!', 1.0])
 
 
 class FactoryTestApplication(Gtk.Application):
@@ -317,6 +319,7 @@ class Handler:
         # Flasher page
         self.flasher_status = builder.get_object('flasher_status')
         self.flasher_progress = builder.get_object('flasher_progress')
+        self.flasher_button = builder.get_object('flasher_button')
 
         # Result storage
         self.auto_result = []
@@ -326,6 +329,14 @@ class Handler:
         self.modem_last = None
 
         mess_with_permissions()
+
+        if os.path.isfile("/usr/share/factorytest/label.txt"):
+            with open('/usr/share/factorytest/label.txt') as handle:
+                label = handle.read()
+            self.flasher_button.get_children()[0].set_label("Overwrite eMMC with {}".format(label))
+        else:
+            self.flasher_button.set_sensitive(False)
+
 
     def on_quit(self, *args):
         Gtk.main_quit()
