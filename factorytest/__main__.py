@@ -31,6 +31,7 @@ import factorytest.audio as audio
 # For led tests
 import factorytest.led as led
 from factorytest import motor
+from factorytest.bmap.bmapcopy import BmapCopy
 
 try:
     import importlib.resources as pkg_resources
@@ -218,17 +219,27 @@ class Flasher(threading.Thread):
         print("Started flashing procedure")
         GLib.idle_add(self.callback, ['Starting flashing procedure', 0.0])
         subprocess.run(['sudo', 'chmod', '777', '/dev/mmcblk2'])
-        done = 0
-
-        blocksize = 1024 * 1024 * 5
 
         with open('/usr/share/factorytest/label.txt') as handle:
             label = handle.read()
 
+        GLib.idle_add(self.callback, ['Flashing {}'.format(label), 0.0])
+
+        if os.path.isfile('/usr/share/factorytest/os.img.bmap'):
+            self.run_bmap(label)
+        else:
+            self.run_dd(label)
+
+        GLib.idle_add(self.callback, ['Purging caches...', 1.0])
+        subprocess.run(['sudo', 'sync'])
+        GLib.idle_add(self.callback, ['Flashing complete!', 1.0])
+
+    def run_dd(self, label):
+        done = 0
+        blocksize = 1024 * 1024 * 5
+
         with open('/usr/share/factorytest/filesize.txt') as handle:
             size = int(handle.read().strip())
-
-        GLib.idle_add(self.callback, ['Flashing {}'.format(label), 0.0])
 
         blocks = size / blocksize
         with lzma.open('/usr/share/factorytest/os.img.xz', 'rb') as sd:
@@ -240,9 +251,16 @@ class Flasher(threading.Thread):
                     emmc.write(block)
                     done += 1
                     GLib.idle_add(self.callback, ['Writing {}'.format(label), done / blocks])
-        GLib.idle_add(self.callback, ['Purging caches...', 1.0])
-        subprocess.run(['sudo', 'sync'])
-        GLib.idle_add(self.callback, ['Flashing complete!', 1.0])
+
+    def run_bmap(self, label):
+        with lzma.open('/usr/share/factorytest/os.img.xz', 'rb') as image:
+            image.name = '/usr/share/factorytest/os.img.xz'
+            with open('/dev/mmcblk2', 'wb') as emmc:
+                with open('/usr/share/factorytest/os.img.bmap', 'rb') as bmap:
+                    instance = BmapCopy(image, emmc, bmap)
+                    instance.on_progress = lambda percent: GLib.idle_add(self.callback,
+                                                                         ['Writing {}'.format(label), percent / 100.0])
+                    instance.copy()
 
 
 class FactoryTestApplication(Gtk.Application):
@@ -336,7 +354,6 @@ class Handler:
             self.flasher_button.get_children()[0].set_label("Overwrite eMMC with {}".format(label))
         else:
             self.flasher_button.set_sensitive(False)
-
 
     def on_quit(self, *args):
         Gtk.main_quit()
