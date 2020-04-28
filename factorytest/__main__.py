@@ -5,6 +5,7 @@ import subprocess
 import threading
 import time
 from io import SEEK_END
+import lzma
 
 import gi
 import logging
@@ -215,23 +216,22 @@ class Flasher(threading.Thread):
 
     def run(self):
         print("Started flashing procedure")
-        GLib.idle_add(self.callback, ['Preparing temporary root', 0.0])
-        try:
-            self.pivot_temp_root()
-        except Exception as e:
-            logging.debug(e)
-            GLib.idle_add(self.callback, ['Pivot failed, stopped', 0.0])
-            return
-
         GLib.idle_add(self.callback, ['Starting flashing procedure', 0.0])
-        subprocess.run(['sudo', 'chmod', '777', '/dev/mmcblk0'])
         subprocess.run(['sudo', 'chmod', '777', '/dev/mmcblk2'])
         done = 0
-        blocksize = 1024 * 1024  # 1MB blocks
-        blocks_max = 2048  # Image is smaller than 2GB
-        with open('/dev/mmcblk0', 'rb') as sd:
-            size = blocksize * blocks_max
-            blocks = math.ceil(size / blocksize)
+
+        blocksize = 1024 * 1024 * 5
+
+        with open('/usr/share/factorytest/label.txt') as handle:
+            label = handle.read()
+
+        with open('/usr/share/factorytest/filesize.txt') as handle:
+            size = int(handle.read().strip())
+
+        GLib.idle_add(self.callback, ['Flashing {}'.format(label), 0.0])
+
+        blocks = size / blocksize
+        with lzma.open('/usr/share/factorytest/os.img.xz', 'rb') as sd:
             with open('/dev/mmcblk2', 'wb') as emmc:
                 while True:
                     block = sd.read(blocksize)
@@ -241,41 +241,6 @@ class Flasher(threading.Thread):
                     done += 1
                     GLib.idle_add(self.callback, ['Writing image', done / blocks])
         GLib.idle_add(self.callback, ['Flashing complete!', 100.0])
-
-    def pivot_temp_root(self):
-        # Build a small distro in tmpfs to pivot to
-        GLib.idle_add(self.callback, ['Preparing temporary root > making tmpfs', 0.0])
-        os.mkdir('/tmp/tmproot')
-        subprocess.run(['sudo', 'mount', '-t', 'tmpfs', 'none', '/tmp/tmproot'])
-        for name in ['proc', 'sys', 'dev', 'run', 'usr', 'var', 'tmp', 'oldroot']:
-            os.mkdir('/tmp/tmproot/{}'.format(name))
-        for name in ['/bin', '/etc', '/sbin', '/lib']:
-            GLib.idle_add(self.callback, ['Preparing temporary root > copy {}'.format(name), 0.0])
-            subprocess.run(['sudo', 'cp', '-a', name, '/tmp/tmproot/'])
-        for name in ['bin', 'sbin', 'lib']:
-            GLib.idle_add(self.callback, ['Preparing temporary root > copy /usr/{}'.format(name), 0.0])
-            subprocess.run(['sudo', 'cp', '-a', '/usr/{}'.format(name), '/tmp/tmproot/usr/'])
-        for name in ['empty', 'lib', 'local', 'locks', 'opt', 'run', 'spool', 'tmp']:
-            GLib.idle_add(self.callback, ['Preparing temporary root > copy /var/{}'.format(name), 0.0])
-            subprocess.run(['sudo', 'cp', '-a', '/var/{}'.format(name), '/tmp/tmproot/var/'])
-
-        # Pivot root
-        GLib.idle_add(self.callback, ['Preparing temporary root > pivoting', 0.0])
-        subprocess.run(['sudo', 'mount', '--make-rprivate', '/'])
-        subprocess.run(['sudo', 'pivot_root', '/tmp/tmproot', '/tmp/tmproot/oldroot'])
-        GLib.idle_add(self.callback, ['Preparing temporary root > moving mounts', 0.0])
-        for name in ['dev', 'proc', 'sys', 'run']:
-            subprocess.run(['sudo', 'mount', '--move', '/oldroot/{}'.format(name), '/{}'.format(name)])
-
-        time.sleep(1)
-
-        # Kill services on old rootfs
-        # GLib.idle_add(self.callback, ['Preparing temporary root > cleaning processes', 0.0])
-        # subprocess.run(['sudo', 'fuser', '-mk', '/oldroot'])
-
-        # Unmount old rootfs
-        GLib.idle_add(self.callback, ['Preparing temporary root > unmounting rootfs', 0.0])
-        subprocess.run(['sudo', 'umount', '-fl', '/oldroot'])
 
 
 class FactoryTestApplication(Gtk.Application):
