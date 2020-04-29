@@ -311,6 +311,8 @@ class Handler:
         self.progress_status = builder.get_object('progress_status')
         self.progress_bar = builder.get_object('progress_bar')
         self.progress_log = builder.get_object('progress_log')
+        self.img_front = builder.get_object('img_front')
+        self.img_rear = builder.get_object('img_rear')
 
         # Touchscreen page
         self.touchscreen_horisontal = builder.get_object('touchscreen_horisontal')
@@ -385,6 +387,12 @@ class Handler:
             ob = self.builder.get_object('result_' + update[0])
             if update[1] is True:
                 ob.set_text('OK')
+
+                if update[0] == 'rearcam':
+                    self.img_rear.set_from_file('/tmp/ov5640.png')
+                elif update[0] == 'frontcam':
+                    self.img_rear.set_from_file('/tmp/gc2145.png')
+
             elif update[1] is False:
                 self.auto_result.append(update[1])
                 ob.set_text('failed')
@@ -471,23 +479,14 @@ class Handler:
         self.run_yesno('earpiece', 'Does sound come out of the earpiece?')
         audio.test_earpiece()
         audio.test_earpiece()
-        audio.test_earpiece()
-        audio.test_earpiece()
-        audio.test_earpiece()
 
     def on_test_headphone_clicked(self, *args):
         self.run_yesno('headphone', 'Does sound come out of the headphones?')
         audio.test_headphones()
         audio.test_headphones()
-        audio.test_headphones()
-        audio.test_headphones()
-        audio.test_headphones()
 
     def on_test_speaker_clicked(self, *args):
         self.run_yesno('speaker', 'Does sound come out of the speaker?')
-        audio.test_speaker()
-        audio.test_speaker()
-        audio.test_speaker()
         audio.test_speaker()
         audio.test_speaker()
 

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.22.1 -->
+<!-- Generated with glade 3.22.2 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
   <object class="GtkWindow" id="main_window">
     <property name="can_focus">False</property>
-    <child>
+    <child type="titlebar">
       <placeholder/>
     </child>
     <child>
@@ -16,7 +16,7 @@
           <object class="GtkGrid" id="page_main">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="row_spacing">6</property>
+            <property name="row_spacing">15</property>
             <property name="column_spacing">6</property>
             <property name="column_homogeneous">True</property>
             <child>
@@ -118,14 +118,17 @@
               </packing>
             </child>
             <child>
-              <object class="GtkSeparator">
+              <object class="GtkButton" id="test_motor">
+                <property name="label" translatable="yes">Motor</property>
+                <property name="height_request">64</property>
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <signal name="clicked" handler="on_test_motor_clicked" swapped="no"/>
               </object>
               <packing>
-                <property name="left_attach">0</property>
-                <property name="top_attach">4</property>
-                <property name="width">2</property>
+                <property name="left_attach">1</property>
+                <property name="top_attach">3</property>
               </packing>
             </child>
             <child>
@@ -139,22 +142,27 @@
               </object>
               <packing>
                 <property name="left_attach">0</property>
-                <property name="top_attach">5</property>
+                <property name="top_attach">6</property>
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="test_motor">
-                <property name="label" translatable="yes">Motor</property>
-                <property name="height_request">64</property>
+              <object class="GtkSeparator">
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <signal name="clicked" handler="on_test_motor_clicked" swapped="no"/>
+                <property name="can_focus">False</property>
+                <property name="margin_top">20</property>
+                <property name="margin_bottom">20</property>
               </object>
               <packing>
-                <property name="left_attach">1</property>
-                <property name="top_attach">3</property>
+                <property name="left_attach">0</property>
+                <property name="top_attach">5</property>
+                <property name="width">2</property>
               </packing>
+            </child>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <placeholder/>
             </child>
             <child>
               <placeholder/>
@@ -202,7 +210,6 @@
                 <property name="can_focus">False</property>
                 <property name="row_spacing">4</property>
                 <property name="column_spacing">6</property>
-                <property name="row_homogeneous">True</property>
                 <property name="column_homogeneous">True</property>
                 <child>
                   <object class="GtkLabel">
@@ -369,6 +376,36 @@
                   </object>
                   <packing>
                     <property name="left_attach">0</property>
+                    <property name="top_attach">8</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkImage" id="img_rear">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="margin_left">15</property>
+                    <property name="margin_right">7</property>
+                    <property name="margin_top">5</property>
+                    <property name="margin_bottom">10</property>
+                    <property name="stock">gtk-missing-image</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">0</property>
+                    <property name="top_attach">7</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkImage" id="img_front">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="margin_left">7</property>
+                    <property name="margin_right">15</property>
+                    <property name="margin_top">5</property>
+                    <property name="margin_bottom">10</property>
+                    <property name="stock">gtk-missing-image</property>
+                  </object>
+                  <packing>
+                    <property name="left_attach">1</property>
                     <property name="top_attach">7</property>
                   </packing>
                 </child>
@@ -567,7 +604,7 @@
             </child>
           </object>
           <packing>
-            <property name="name">page3</property>
+            <property name="name">page2</property>
             <property name="title" translatable="yes">page2</property>
             <property name="position">2</property>
           </packing>
@@ -625,7 +662,7 @@
           </object>
           <packing>
             <property name="name">page3</property>
-            <property name="title" translatable="yes">page2</property>
+            <property name="title" translatable="yes">page3</property>
             <property name="position">3</property>
           </packing>
         </child>
@@ -872,8 +909,8 @@
             </child>
           </object>
           <packing>
-            <property name="name">page2</property>
-            <property name="title" translatable="yes">page2</property>
+            <property name="name">page4</property>
+            <property name="title" translatable="yes">page4</property>
             <property name="position">4</property>
           </packing>
         </child>
@@ -1357,8 +1394,8 @@
             </child>
           </object>
           <packing>
-            <property name="name">page4</property>
-            <property name="title" translatable="yes">page4</property>
+            <property name="name">page5</property>
+            <property name="title" translatable="yes">page5</property>
             <property name="position">5</property>
           </packing>
         </child>

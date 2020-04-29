@@ -4,11 +4,11 @@ import time
 
 def fix_led_permissions():
     for led in ['red', 'green', 'blue']:
-        subprocess.check_output(['sudo', 'chmod', '777', '/sys/class/leds/pinephone:{}:user/brightness'.format(led)])
+        subprocess.check_output(['sudo', 'chmod', '777', '/sys/class/leds/{}:indicator/brightness'.format(led)])
 
 
 def write_led(color, on=False):
-    with open('/sys/class/leds/pinephone:{}:user/brightness'.format(color), 'w') as handle:
+    with open('/sys/class/leds/{}:indicator/brightness'.format(color), 'w') as handle:
         if on:
             handle.write('1\n')
         else:

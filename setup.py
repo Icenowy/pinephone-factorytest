@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='factorytest_pinephone',
-    version='0.37.0',
+    version='0.39.0',
     packages=['factorytest', 'factorytest.ioctl', 'factorytest.bmap'],
     url='https://gitlab.com/MartijnBraam/factorytest',
     license='MIT',

@@ -33,7 +33,7 @@ def upload_rumble(handle):
     effect.id = -1
     effect.u.rumble.strong_magnitude = 0
     effect.u.rumble.weak_magnitude = 0xc000
-    effect.replay.length = 5000
+    effect.replay.length = 3000
     effect.replay.delay = 0
 
     EVIOCSFF = IOC(IOC_WRITE, 'E', 0x80, ctypes.sizeof(ff_effect))
