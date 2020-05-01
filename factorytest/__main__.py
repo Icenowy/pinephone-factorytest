@@ -38,6 +38,8 @@ try:
 except ImportError:
     import importlib_resources as pkg_resources
 
+import pkg_resources as pkgr
+
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GLib, GObject, Gio, GdkPixbuf
 
@@ -298,6 +300,8 @@ class Handler:
         self.test_touchscreen = builder.get_object('test_touchscreen')
         self.test_earpiece = builder.get_object('test_earpiece')
         self.test_modem = builder.get_object('test_modem')
+        self.test_flash = builder.get_object('test_flash')
+        self.test_torch = builder.get_object('test_torch')
 
         # Stack pages
         self.page_main = builder.get_object('page_main')
@@ -347,6 +351,9 @@ class Handler:
         self.yesno_button = None
         self.modem_hide_ids = False
         self.modem_last = None
+
+        version = pkgr.get_distribution('factorytest_pinephone').version
+        self.window.set_title("factorytest v{}".format(version))
 
         mess_with_permissions()
 
@@ -498,6 +505,14 @@ class Handler:
     def on_test_motor_clicked(self, *args):
         self.run_yesno('motor', 'Does vibration motor work?')
         motor.test_motor()
+
+    def on_test_flash_clicked(self, *args):
+        self.run_yesno('flash', 'Does the camera flash work?')
+        led.test_flash()
+
+    def on_test_torch_clicked(self, *args):
+        self.run_yesno('torch', 'Does the flashlight light up?')
+        led.test_torch()
 
     def on_flasher_button_clicked(self, button):
         button.set_sensitive(False)

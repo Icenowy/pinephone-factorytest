@@ -16,13 +16,16 @@
           <object class="GtkGrid" id="page_main">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+            <property name="margin_left">10</property>
+            <property name="margin_right">10</property>
+            <property name="margin_top">20</property>
             <property name="row_spacing">15</property>
-            <property name="column_spacing">6</property>
+            <property name="column_spacing">10</property>
             <property name="column_homogeneous">True</property>
             <child>
               <object class="GtkButton" id="test_auto">
                 <property name="label" translatable="yes">Automatic tests</property>
-                <property name="height_request">64</property>
+                <property name="height_request">96</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -36,7 +39,7 @@
             <child>
               <object class="GtkButton" id="test_touchscreen">
                 <property name="label" translatable="yes">Touchscreen</property>
-                <property name="height_request">64</property>
+                <property name="height_request">96</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -50,7 +53,7 @@
             <child>
               <object class="GtkButton" id="test_earpiece">
                 <property name="label" translatable="yes">Earpiece</property>
-                <property name="height_request">64</property>
+                <property name="height_request">96</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -64,7 +67,7 @@
             <child>
               <object class="GtkButton" id="test_modem">
                 <property name="label" translatable="yes">Modem</property>
-                <property name="height_request">64</property>
+                <property name="height_request">96</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -78,7 +81,7 @@
             <child>
               <object class="GtkButton" id="test_headphone">
                 <property name="label" translatable="yes">Headphone</property>
-                <property name="height_request">64</property>
+                <property name="height_request">96</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -92,7 +95,7 @@
             <child>
               <object class="GtkButton" id="test_speaker">
                 <property name="label" translatable="yes">Speaker</property>
-                <property name="height_request">64</property>
+                <property name="height_request">96</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -106,7 +109,7 @@
             <child>
               <object class="GtkButton" id="test_rgb">
                 <property name="label" translatable="yes">RGB Led</property>
-                <property name="height_request">64</property>
+                <property name="height_request">96</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -120,7 +123,7 @@
             <child>
               <object class="GtkButton" id="test_motor">
                 <property name="label" translatable="yes">Motor</property>
-                <property name="height_request">64</property>
+                <property name="height_request">96</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -134,7 +137,7 @@
             <child>
               <object class="GtkButton" id="flash_emmc">
                 <property name="label" translatable="yes">Flash to eMMC</property>
-                <property name="height_request">64</property>
+                <property name="height_request">96</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -159,10 +162,32 @@
               </packing>
             </child>
             <child>
-              <placeholder/>
+              <object class="GtkButton" id="test_flash">
+                <property name="label" translatable="yes">Camera flash</property>
+                <property name="height_request">96</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <signal name="clicked" handler="on_test_flash_clicked" swapped="no"/>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">4</property>
+              </packing>
             </child>
             <child>
-              <placeholder/>
+              <object class="GtkButton" id="test_torch">
+                <property name="label" translatable="yes">Torch</property>
+                <property name="height_request">96</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <signal name="clicked" handler="on_test_torch_clicked" swapped="no"/>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="top_attach">4</property>
+              </packing>
             </child>
             <child>
               <placeholder/>
@@ -430,13 +455,14 @@
           <object class="GtkBox" id="page_flasher">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+            <property name="margin_left">10</property>
+            <property name="margin_right">10</property>
             <property name="orientation">vertical</property>
             <property name="homogeneous">True</property>
             <child>
               <object class="GtkScrolledWindow">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="shadow_type">in</property>
                 <child>
                   <object class="GtkViewport">
                     <property name="visible">True</property>
@@ -457,6 +483,7 @@
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                                 <property name="halign">start</property>
+                                <property name="margin_top">20</property>
                                 <property name="label" translatable="yes">eMMC Flasher</property>
                               </object>
                               <packing>
@@ -633,6 +660,10 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <property name="margin_left">10</property>
+                <property name="margin_right">10</property>
+                <property name="margin_top">10</property>
+                <property name="margin_bottom">10</property>
                 <property name="use_stock">True</property>
                 <property name="always_show_image">True</property>
                 <signal name="clicked" handler="on_yesno_yes_clicked" swapped="no"/>
@@ -649,6 +680,9 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <property name="margin_left">10</property>
+                <property name="margin_right">10</property>
+                <property name="margin_bottom">10</property>
                 <property name="use_stock">True</property>
                 <property name="always_show_image">True</property>
                 <signal name="clicked" handler="on_yesno_no_clicked" swapped="no"/>
@@ -924,6 +958,9 @@
               <object class="GtkFrame">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="margin_left">10</property>
+                <property name="margin_right">10</property>
+                <property name="margin_bottom">20</property>
                 <property name="label_xalign">0</property>
                 <property name="shadow_type">in</property>
                 <child>
@@ -1130,6 +1167,9 @@
               <object class="GtkFrame">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="margin_left">10</property>
+                <property name="margin_right">10</property>
+                <property name="margin_bottom">20</property>
                 <property name="label_xalign">0</property>
                 <property name="shadow_type">in</property>
                 <child>
@@ -1225,6 +1265,9 @@
               <object class="GtkFrame">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="margin_left">10</property>
+                <property name="margin_right">10</property>
+                <property name="margin_bottom">40</property>
                 <property name="label_xalign">0</property>
                 <property name="shadow_type">in</property>
                 <child>
@@ -1347,14 +1390,18 @@
               <object class="GtkBox">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="margin_left">10</property>
+                <property name="margin_right">10</property>
                 <property name="spacing">10</property>
                 <property name="homogeneous">True</property>
                 <child>
                   <object class="GtkToggleButton" id="modem_hide_ids">
                     <property name="label" translatable="yes">Hide IDs</property>
+                    <property name="height_request">64</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
+                    <property name="margin_bottom">20</property>
                     <signal name="toggled" handler="on_modem_hide_ids_toggled" swapped="no"/>
                   </object>
                   <packing>
@@ -1364,10 +1411,26 @@
                   </packing>
                 </child>
                 <child>
-                  <placeholder/>
+                  <object class="GtkLabel">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
                 </child>
                 <child>
-                  <placeholder/>
+                  <object class="GtkLabel">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">2</property>
+                  </packing>
                 </child>
               </object>
               <packing>
@@ -1379,9 +1442,12 @@
             <child>
               <object class="GtkButton" id="modem_back">
                 <property name="label">gtk-go-back</property>
+                <property name="height_request">64</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <property name="margin_left">10</property>
+                <property name="margin_right">10</property>
                 <property name="use_stock">True</property>
                 <property name="always_show_image">True</property>
                 <signal name="clicked" handler="on_back_clicked" swapped="no"/>

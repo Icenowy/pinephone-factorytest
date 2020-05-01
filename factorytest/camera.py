@@ -1,7 +1,7 @@
 import subprocess
 
 
-def take_snapshot(node, res, name, rotate):
+def take_snapshot(node, res, name, rotate, skip=5):
     command = ['sudo', 'media-ctl', '-d', '/dev/media1', '--set-v4l2', '"{}":0[fmt:UYVY8_2X8/{}]'.format(node, res)]
     p = subprocess.run(command, timeout=5)
     if p.returncode != 0:
@@ -15,7 +15,7 @@ def take_snapshot(node, res, name, rotate):
         return False
 
     command = ['sudo', 'v4l2-ctl', '--device', '/dev/video1', '--stream-mmap', '--stream-to=/tmp/frame.raw',
-               '--stream-count=1']
+               '--stream-count=1', '--stream-skip={}'.format(skip)]
     p = subprocess.run(command, timeout=10)
     if p.returncode != 0:
         return False
@@ -55,11 +55,10 @@ def check_ov5640():
 
     set_route('ov5640')
     try:
-        take_snapshot('ov5640 3-004c', '1280x720', '/tmp/ov5640.png', '90')
+        return take_snapshot('ov5640 3-004c', '1280x720', '/tmp/ov5640.png', '90')
     except Exception as e:
+        print(e)
         return False
-
-    return True
 
 
 def check_gc2145():
@@ -69,8 +68,7 @@ def check_gc2145():
 
     set_route('gc2145')
     try:
-        take_snapshot('gc2145 3-003c', '1280x720', '/tmp/gc2145.png', '270')
+        return take_snapshot('gc2145 3-003c', '1280x720', '/tmp/gc2145.png', '270', skip=35)
     except Exception as e:
+        print(e)
         return False
-
-    return True
