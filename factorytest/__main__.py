@@ -98,7 +98,7 @@ class AutoTests(threading.Thread):
         GLib.idle_add(self.callback, ['Testing GC2145', 6, ('rearcam', result)])
 
         # Front camera
-        result = "Skipped"
+        result = camera.check_gc2145()
         GLib.idle_add(self.callback, ['Done', 7, ('frontcam', result)])
 
     def test_sensor(self, name, attribute):
@@ -391,7 +391,7 @@ class Handler:
                 if update[0] == 'rearcam':
                     self.img_rear.set_from_file('/tmp/ov5640.png')
                 elif update[0] == 'frontcam':
-                    self.img_rear.set_from_file('/tmp/gc2145.png')
+                    self.img_front.set_from_file('/tmp/gc2145.png')
 
             elif update[1] is False:
                 self.auto_result.append(update[1])
