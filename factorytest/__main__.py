@@ -302,6 +302,11 @@ class Handler:
         self.test_modem = builder.get_object('test_modem')
         self.test_flash = builder.get_object('test_flash')
         self.test_torch = builder.get_object('test_torch')
+        self.test_headphone = builder.get_object('test_headphone')
+        self.test_speaker = builder.get_object('test_speaker')
+        self.test_rgb = builder.get_object('test_rgb')
+        self.test_motor = builder.get_object('test_motor')
+        self.flash_emmc = builder.get_object('flash_emmc')
 
         # Stack pages
         self.page_main = builder.get_object('page_main')
@@ -415,6 +420,7 @@ class Handler:
             else:
                 self.test_auto.get_style_context().add_class('suggested-action')
                 self.test_auto.get_style_context().remove_class('destructive-action')
+            self.on_test_update()
 
         self.page_progress.show_all()
 
@@ -461,6 +467,7 @@ class Handler:
         button.get_style_context().add_class('suggested-action')
         if len(self.tstest_clicked) == 12:
             self.test_touchscreen.get_style_context().add_class('suggested-action')
+            self.on_test_update()
 
     def run_yesno(self, button, question):
         self.yesno_button = button
@@ -474,6 +481,7 @@ class Handler:
         button.get_style_context().remove_class('destructive-action')
         self.page_main.show_all()
         self.stack.set_visible_child(self.page_main)
+        self.on_test_update()
 
     def on_yesno_no_clicked(self, *args):
         button = self.builder.get_object('test_{}'.format(self.yesno_button))
@@ -481,6 +489,7 @@ class Handler:
         button.get_style_context().remove_class('suggested-action')
         self.page_main.show_all()
         self.stack.set_visible_child(self.page_main)
+        self.on_test_update()
 
     def on_test_earpiece_clicked(self, *args):
         self.run_yesno('earpiece', 'Does sound come out of the earpiece?')
@@ -523,6 +532,30 @@ class Handler:
         status, progress = progress
         self.flasher_status.set_text(status)
         self.flasher_progress.set_fraction(progress)
+
+    def on_test_update(self):
+        passed = 0
+        if self.test_auto.get_style_context().has_class('suggested-action'):
+            passed += 1
+        if self.test_earpiece.get_style_context().has_class('suggested-action'):
+            passed += 1
+        if self.test_headphone.get_style_context().has_class('suggested-action'):
+            passed += 1
+        if self.test_speaker.get_style_context().has_class('suggested-action'):
+            passed += 1
+        if self.test_flash.get_style_context().has_class('suggested-action'):
+            passed += 1
+        if self.test_torch.get_style_context().has_class('suggested-action'):
+            passed += 1
+        if self.test_rgb.get_style_context().has_class('suggested-action'):
+            passed += 1
+        if self.test_touchscreen.get_style_context().has_class('suggested-action'):
+            passed += 1
+        if self.test_motor.get_style_context().has_class('suggested-action'):
+            passed += 1
+
+        if passed == 9:
+            self.flash_emmc.set_sensitive(True)
 
 
 def main():
