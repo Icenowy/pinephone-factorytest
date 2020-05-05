@@ -30,8 +30,8 @@ def test_earpiece():
 
 
 def test_headphones():
-    set_sound_device('Headphone')
-    set_volume('Headphone', '50%')
+    set_sound_device('Headphones')
+    set_volume('Headphone', '60%')
     speaker_test(2)
 
 
