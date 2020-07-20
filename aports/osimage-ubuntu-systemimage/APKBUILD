@@ -1,0 +1,35 @@
+# Contributor: Martijn Braam
+pkgname=osimage-ubuntu-systemimage
+pkgver=7
+pkgrel=0
+pkgdesc="Flashable image for factorytest"
+url="https://ci.ubports.com/job/rootfs/job/rootfs-pinephone-systemimage/"
+arch="all"
+license="MIT"
+makedepends="xz"
+source="
+	$pkgname-$pkgver.img.xz::https://ci.ubports.com/job/rootfs/job/rootfs-pinephone-systemimage/$pkgver/artifact/ubuntu-touch-pinephone.img.xz
+	$pkgname-$pkgver.img.bmap::https://ci.ubports.com/job/rootfs/job/rootfs-pinephone-systemimage/$pkgver/artifact/ubuntu-touch-pinephone.img.bmap
+"
+options="!check"
+
+build() {
+	mkdir -p "$builddir"
+	echo "Ubuntu Touch #$pkgver" > "$builddir"/label.txt
+	
+	xz --decompress --stdout $pkgname-$pkgver.img.xz | wc -c > "$builddir"/filesize.txt
+}
+
+package() {
+	install -D -m664 "$builddir"/label.txt \
+		"$pkgdir"/usr/share/factorytest/label.txt
+	install -D -m664 "$builddir"/filesize.txt \
+		"$pkgdir"/usr/share/factorytest/filesize.txt
+	install -D -m664 "$srcdir"/$pkgname-$pkgver.img.xz \
+		"$pkgdir"/usr/share/factorytest/os.img.xz
+	install -D -m664 "$srcdir"/$pkgname-$pkgver.img.bmap \
+		"$pkgdir"/usr/share/factorytest/os.img.bmap
+}
+
+sha512sums="9e24ae8f16f2994d4d3c1fb6e144bed2879fd95dca37f8e8e071844d937614c7233e04168bf964432c035e3ebef32e08875591c4ceb05c8aba7e24a09e33634e  osimage-ubuntu-systemimage-7.img.xz
+87dc0807d9163e56840cbe47f9f115f0a2a904dc276923a0384fc2cdafd2594e326eb9caa8ae799121182f8ddf0331323860f6d29d18565fb5e660c48a7db507  osimage-ubuntu-systemimage-7.img.bmap"
