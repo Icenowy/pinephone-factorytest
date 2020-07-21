@@ -31,6 +31,10 @@ import factorytest.audio as audio
 # For led tests
 import factorytest.led as led
 from factorytest import motor
+
+# For anx7688 tests
+import factorytest.anx as anx
+
 from factorytest.bmap.bmapcopy import BmapCopy
 
 try:
@@ -93,15 +97,20 @@ class AutoTests(threading.Thread):
 
         # modem test
         result = modem.test_eg25()
-        GLib.idle_add(self.callback, ['Testing OV5640', 5, ('modem', result)])
+        GLib.idle_add(self.callback, ['Testing ANX7688', 5, ('modem', result)])
+
+        # anx7688 test
+        result = anx.test_anx()
+        GLib.idle_add(self.callback, ['Testing OV5640', 6, ('anx', result)])
+
 
         # Rear camera
         result = camera.check_ov5640()
-        GLib.idle_add(self.callback, ['Testing GC2145', 6, ('rearcam', result)])
+        GLib.idle_add(self.callback, ['Testing GC2145', 7, ('rearcam', result)])
 
         # Front camera
         result = camera.check_gc2145()
-        GLib.idle_add(self.callback, ['Done', 7, ('frontcam', result)])
+        GLib.idle_add(self.callback, ['Done', 8, ('frontcam', result)])
 
     def test_sensor(self, name, attribute):
         for device in glob.glob('/sys/bus/iio/devices/iio:device*'):
@@ -391,7 +400,7 @@ class Handler:
 
     def autotests_update(self, result):
         self.progress_status.set_text(result[0])
-        fraction = result[1] / 7.0
+        fraction = result[1] / 8.0
         self.progress_bar.set_fraction(fraction)
 
         update = result[2]
