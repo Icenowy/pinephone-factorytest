@@ -1,5 +1,6 @@
 import os
 import subprocess
+import time
 
 
 # Fresh phone:
@@ -23,4 +24,5 @@ def test_anx():
 
 
 def run_firmware_update():
-    subprocess.run(['sudo', 'sh -c "echo 1 > /sys/class/typec/port0/device/flash_eeprom"'])
+    subprocess.run(['sudo', 'sh', '-c', 'echo 1 > /sys/class/typec/port0/device/flash_eeprom'])
+    time.sleep(2)

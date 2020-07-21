@@ -19,5 +19,6 @@ Current tests
 * RGB notification led test
 * Vibration motor test
 * Flashlight and torch test
+* ANX7688, flash firmware and verify it loads with a cable plugged in
 
 After the tests are successfull a bundled OS image can be flashed, it supports compressed images and bmap files.

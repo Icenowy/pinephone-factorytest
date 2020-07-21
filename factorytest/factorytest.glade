@@ -194,6 +194,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
+                <property name="sensitive">False</property>
                 <signal name="clicked" handler="on_test_anx_clicked" swapped="no"/>
               </object>
               <packing>

@@ -103,7 +103,6 @@ class AutoTests(threading.Thread):
         result = anx.test_anx()
         GLib.idle_add(self.callback, ['Testing OV5640', 6, ('anx', result)])
 
-
         # Rear camera
         result = camera.check_ov5640()
         GLib.idle_add(self.callback, ['Testing GC2145', 7, ('rearcam', result)])
@@ -530,6 +529,10 @@ class Handler:
 
     def on_test_torch_clicked(self, *args):
         self.run_yesno('torch', 'Does the flashlight light up?')
+        led.test_torch()
+
+    def on_test_anx_clicked(self, *args):
+        self.run_yesno('torch', 'No test?')
         led.test_torch()
 
     def on_flasher_button_clicked(self, button):
