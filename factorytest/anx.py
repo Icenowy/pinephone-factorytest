@@ -2,11 +2,24 @@ import os
 import subprocess
 
 
+# Fresh phone:
+# boot firmware load failed
+
+# Phone with firmware:
+# OCM firmware loaded
+
+# Cable plug-in
+# cable inserted
+
+
 def test_anx():
-    klog = subprocess.check_output('dmesg')
-    if 'OCM firmware loaded' not in klog:
-        return 'Not plugged in'
-    return os.path.isdir('/sys/class/typec/port0')
+    klog = subprocess.check_output('dmesg', universal_newlines=True)
+    if 'OCM firmware loaded' in klog:
+        return os.path.isdir('/sys/class/typec/port0')
+    if 'boot firmware load failed' in klog:
+        run_firmware_update()
+        return test_anx()
+    return "No USB cable"
 
 
 def run_firmware_update():
