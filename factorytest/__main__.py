@@ -391,12 +391,12 @@ class Handler:
         mem_gb = math.ceil(mem_bytes / (1024. ** 3))
         self.stat_memory.set_text('{} GB'.format(mem_gb))
 
-        sysfs = '/sys/class/block/mmc0/size'
+        sysfs = '/sys/class/block/mmcblk2/size'
         with open(sysfs) as handle:
             raw = handle.read()
 
         size = int(raw.strip())
-        emmc_gb = math.ceil(size / 2 / 1024 / 1024)
+        emmc_gb = math.ceil(size / 2 / 1000 / 1000)
         self.stat_emmc.set_text('{} GB'.format(emmc_gb))
 
     def on_test_auto_clicked(self, *args):
@@ -555,8 +555,8 @@ class Handler:
         led.test_torch()
 
     def on_test_mic_clicked(self, *args):
-        self.run_yesno('torch', 'No test?')
-        led.test_torch()
+        self.run_yesno('mic', 'Did you hear the microphone recording?')
+        audio.test_mic()
 
     def on_flasher_button_clicked(self, button):
         button.set_sensitive(False)
