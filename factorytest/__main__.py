@@ -303,6 +303,10 @@ class Handler:
         self.window = builder.get_object('main_window')
         self.stack = builder.get_object('main_stack')
 
+        # Stat labels
+        self.stat_memory = builder.get_object('stat_memory')
+        self.stat_emmc = builder.get_object('stat_emmc')
+
         # Menu buttons
         self.test_auto = builder.get_object('test_auto')
         self.test_touchscreen = builder.get_object('test_touchscreen')
@@ -377,8 +381,23 @@ class Handler:
         else:
             self.flasher_button.set_sensitive(False)
 
+        self.update_stats()
+
     def on_quit(self, *args):
         Gtk.main_quit()
+
+    def update_stats(self):
+        mem_bytes = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')
+        mem_gb = math.ceil(mem_bytes / (1024. ** 3))
+        self.stat_memory.set_text('{} GB'.format(mem_gb))
+
+        sysfs = '/sys/class/block/mmc0/size'
+        with open(sysfs) as handle:
+            raw = handle.read()
+
+        size = int(raw.strip())
+        emmc_gb = math.ceil(size / 2 / 1024 / 1024)
+        self.stat_emmc.set_text('{} GB'.format(emmc_gb))
 
     def on_test_auto_clicked(self, *args):
         self.stack.set_visible_child(self.page_progress)
@@ -532,6 +551,10 @@ class Handler:
         led.test_torch()
 
     def on_test_anx_clicked(self, *args):
+        self.run_yesno('torch', 'No test?')
+        led.test_torch()
+
+    def on_test_mic_clicked(self, *args):
         self.run_yesno('torch', 'No test?')
         led.test_torch()
 
