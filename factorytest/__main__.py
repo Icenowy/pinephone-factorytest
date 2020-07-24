@@ -397,6 +397,9 @@ class Handler:
 
         size = int(raw.strip())
         emmc_gb = math.ceil(size / 2 / 1000 / 1000)
+        # Round eMMC up to the nearest even number
+        if (emmc_gb % 2) == 1:
+            emmc_gb += 1
         self.stat_emmc.set_text('{} GB'.format(emmc_gb))
 
     def on_test_auto_clicked(self, *args):

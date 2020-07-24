@@ -63,6 +63,8 @@ def test_mic():
     set_sound_device(['Headphones', 'Mic'])
     set_control('Headphone Source Playback Route', 'Mixer')
     set_control('Mic1 Playback Switch', 'on')
+    set_control('Mic1 Playback Volume', '100%')
+    set_volume('Headphone', '60%')
     time.sleep(3)
     set_control('Mic1 Playback Switch', 'off')
     set_control('Headphone Source Playback Route', 'DAC')
