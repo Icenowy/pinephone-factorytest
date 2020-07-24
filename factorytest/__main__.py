@@ -144,6 +144,17 @@ class ModemInfo:
         self.call_number = None
 
 
+class AnxInfo:
+    def __init__(self):
+        self.status = None
+        self.pr = None
+        self.dr = None
+        self.operation_mode = None
+        self.vconn = None
+        self.partner_am = None
+        self.partner_pd = None
+
+
 class ModemTests(threading.Thread):
     def __init__(self, callback):
         threading.Thread.__init__(self)
@@ -217,6 +228,46 @@ class ModemTests(threading.Thread):
                 result.call_technology = None
                 result.call_number = None
                 GLib.idle_add(self.callback, result)
+            time.sleep(1)
+
+
+class UsbTests(threading.Thread):
+    def __init__(self, callback):
+        threading.Thread.__init__(self)
+        self.callback = callback
+        self.running = True
+
+    def read_sysfs(self, path):
+        path = '/sys/class/typec/port0/' + path
+        with open(path, 'r') as handle:
+            raw = handle.read().strip()
+        return raw
+
+    def run(self):
+        print("Started anx test")
+        result = AnxInfo()
+        while self.running:
+            if os.path.isdir('/sys/class/typec/port0'):
+                result.status = 'OK'
+            else:
+                result.status = 'anx7688 not running'
+                GLib.idle_add(self.callback, result)
+                time.sleep(1)
+                continue
+
+            result.pr = self.read_sysfs('power_role')
+            result.dr = self.read_sysfs('data_role')
+            result.operation_mode = self.read_sysfs('power_operation_mode')
+            result.vconn = self.read_sysfs('vconn_source')
+
+            if os.path.isdir('/sys/class/typec/port0/port0-partner'):
+                result.partner_am = self.read_sysfs('port0-partner/accessory_mode')
+                result.partner_pd = self.read_sysfs('port0-partner/supports_usb_power_delivery')
+            else:
+                result.partner_am = ''
+                result.partner_pd = ''
+
+            GLib.idle_add(self.callback, result)
             time.sleep(1)
 
 
@@ -312,6 +363,7 @@ class Handler:
         self.test_touchscreen = builder.get_object('test_touchscreen')
         self.test_earpiece = builder.get_object('test_earpiece')
         self.test_modem = builder.get_object('test_modem')
+        self.test_anx = builder.get_object('test_anx')
         self.test_flash = builder.get_object('test_flash')
         self.test_torch = builder.get_object('test_torch')
         self.test_headphone = builder.get_object('test_headphone')
@@ -369,6 +421,15 @@ class Handler:
         self.modem_hide_ids = False
         self.modem_last = None
 
+        # USB page
+        self.anx_status = builder.get_object('anx_status')
+        self.anx_dr = builder.get_object('anx_dr')
+        self.anx_pr = builder.get_object('anx_pr')
+        self.anx_operation_mode = builder.get_object('anx_operation_mode')
+        self.anx_vconn = builder.get_object('anx_vconn')
+        self.anx_partner_am = builder.get_object('anx_partner_am')
+        self.anx_partner_pd = builder.get_object('anx_partner_pd')
+
         version = pkgr.get_distribution('factorytest_pinephone').version
         self.window.set_title("factorytest v{}".format(version))
 
@@ -411,6 +472,11 @@ class Handler:
     def on_test_modem_clicked(self, *args):
         self.stack.set_visible_child(self.page_modem)
         thread = ModemTests(self.modemtests_update)
+        thread.start()
+
+    def on_test_anx_clicked(self, *args):
+        self.stack.set_visible_child(self.page_anx)
+        thread = UsbTests(self.anx_update)
         thread.start()
 
     def on_flash_emmc_clicked(self, button):
@@ -457,6 +523,37 @@ class Handler:
     def modemtests_update(self, result):
         """
         :type result: ModemInfo
+        """
+        print("Got modem update!")
+        self.modem_status.set_text(result.status if result.status is not None else "...")
+        self.modem_registration.set_text(result.registration if result.registration is not None else "...")
+        if self.modem_hide_ids is True:
+            self.modem_imei.set_text("[Hidden]")
+        else:
+            self.modem_imei.set_text(result.imei if result.imei is not None else "...")
+        self.modem_firmware.set_text(result.firmware if result.firmware is not None else "...")
+        self.modem_network.set_text(result.network if result.network is not None else "...")
+        self.modem_signal.set_text(result.signal if result.signal is not None else "...")
+
+        self.modem_sim_status.set_text(result.sim_status if result.sim_status is not None else "...")
+        if self.modem_hide_ids is True:
+            self.modem_sim_imsi.set_text("[Hidden]")
+        else:
+            self.modem_sim_imsi.set_text(result.imsi if result.imsi is not None else "...")
+
+        self.modem_call_status.set_text(result.call_status if result.call_status is not None else "...")
+        self.modem_call_technology.set_text(result.call_technology if result.call_technology is not None else "...")
+        if self.modem_hide_ids is True:
+            self.modem_call_number.set_text("[Hidden]")
+        else:
+            self.modem_call_number.set_text(result.call_number if result.call_number is not None else "...")
+
+        self.page_modem.show_all()
+        self.modem_last = result
+
+    def anx_update(self, result):
+        """
+        :type result: AnxInfo
         """
         print("Got modem update!")
         self.modem_status.set_text(result.status if result.status is not None else "...")
@@ -551,10 +648,6 @@ class Handler:
 
     def on_test_torch_clicked(self, *args):
         self.run_yesno('torch', 'Does the flashlight light up?')
-        led.test_torch()
-
-    def on_test_anx_clicked(self, *args):
-        self.run_yesno('torch', 'No test?')
         led.test_torch()
 
     def on_test_mic_clicked(self, *args):
