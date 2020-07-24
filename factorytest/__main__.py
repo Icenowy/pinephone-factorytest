@@ -147,12 +147,12 @@ class ModemInfo:
 class AnxInfo:
     def __init__(self):
         self.status = None
-        self.pr = None
-        self.dr = None
-        self.operation_mode = None
-        self.vconn = None
-        self.partner_am = None
-        self.partner_pd = None
+        self.pr = ''
+        self.dr = ''
+        self.operation_mode = ''
+        self.vconn = ''
+        self.partner_am = ''
+        self.partner_pd = ''
 
 
 class ModemTests(threading.Thread):
@@ -379,6 +379,7 @@ class Handler:
         self.page_yesno = builder.get_object('page_yesno')
         self.page_modem = builder.get_object('page_modem')
         self.page_flasher = builder.get_object('page_flasher')
+        self.page_anx = builder.get_object('page_anx')
 
         # Progress page
         self.progress_status = builder.get_object('progress_status')
@@ -555,32 +556,14 @@ class Handler:
         """
         :type result: AnxInfo
         """
-        print("Got modem update!")
-        self.modem_status.set_text(result.status if result.status is not None else "...")
-        self.modem_registration.set_text(result.registration if result.registration is not None else "...")
-        if self.modem_hide_ids is True:
-            self.modem_imei.set_text("[Hidden]")
-        else:
-            self.modem_imei.set_text(result.imei if result.imei is not None else "...")
-        self.modem_firmware.set_text(result.firmware if result.firmware is not None else "...")
-        self.modem_network.set_text(result.network if result.network is not None else "...")
-        self.modem_signal.set_text(result.signal if result.signal is not None else "...")
-
-        self.modem_sim_status.set_text(result.sim_status if result.sim_status is not None else "...")
-        if self.modem_hide_ids is True:
-            self.modem_sim_imsi.set_text("[Hidden]")
-        else:
-            self.modem_sim_imsi.set_text(result.imsi if result.imsi is not None else "...")
-
-        self.modem_call_status.set_text(result.call_status if result.call_status is not None else "...")
-        self.modem_call_technology.set_text(result.call_technology if result.call_technology is not None else "...")
-        if self.modem_hide_ids is True:
-            self.modem_call_number.set_text("[Hidden]")
-        else:
-            self.modem_call_number.set_text(result.call_number if result.call_number is not None else "...")
-
-        self.page_modem.show_all()
-        self.modem_last = result
+        self.anx_status.set_text(result.status)
+        self.anx_pr.set_text(result.pr)
+        self.anx_dr.set_text(result.dr)
+        self.anx_vconn.set_text(result.vconn)
+        self.anx_operation_mode.set_text(result.operation_mode)
+        self.anx_partner_am.set_text(result.partner_am)
+        self.anx_partner_pd.set_text(result.partner_pd)
+        self.page_anx.show_all()
 
     def on_modem_hide_ids_toggled(self, button):
         self.modem_hide_ids = button.get_active()
