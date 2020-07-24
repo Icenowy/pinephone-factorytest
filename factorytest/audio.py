@@ -1,4 +1,5 @@
 import subprocess
+import time
 
 
 def init():
@@ -15,6 +16,12 @@ def set_sound_device(names):
     command = ['alsaucm', 'set', '_verb', 'HiFi']
     for name in names:
         command.extend(['set', '_enadev', name])
+    subprocess.run(command)
+
+
+def set_control(name, value):
+    name = 'name="{}"'.format(name)
+    command = ['amixer', 'cset', name, value]
     subprocess.run(command)
 
 
@@ -53,6 +60,10 @@ def test_speaker():
 
 
 def test_mic():
-    set_sound_device(['Speaker', 'Mic'])
-    record('/tmp/mictest.wav')
-    playback('/tmp/mictest.wav')
+    set_sound_device(['Headphones', 'Mic'])
+    set_control('Headphone Source Playback Route', 'Mixer')
+    set_control('Mic1 Playback Switch', 'on')
+    time.sleep(3)
+    set_control('Mic1 Playback Switch', 'off')
+    set_control('Headphone Source Playback Route', 'DAC')
+    set_sound_device(['Earpiece'])

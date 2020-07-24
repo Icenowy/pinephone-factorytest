@@ -555,7 +555,7 @@ class Handler:
         led.test_torch()
 
     def on_test_mic_clicked(self, *args):
-        self.run_yesno('mic', 'Did you hear the microphone recording?')
+        self.run_yesno('mic', 'Did you hear the microphone in the headphones?')
         audio.test_mic()
 
     def on_flasher_button_clicked(self, button):

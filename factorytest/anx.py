@@ -12,10 +12,14 @@ import time
 # Cable plug-in
 # cable inserted
 
+# CC shorted because of missing CC fix
+# cc_status changed to CC1 = SRC.Ra CC2 = SRC.Ra
 
 def test_anx():
     klog = subprocess.check_output('dmesg', universal_newlines=True)
     if 'OCM firmware loaded' in klog:
+        if 'cc_status changed to CC1 = SRC.Ra CC2 = SRC.Ra' in klog:
+            return 'No CC fix'
         return os.path.isdir('/sys/class/typec/port0')
     if 'boot firmware load failed' in klog:
         run_firmware_update()
