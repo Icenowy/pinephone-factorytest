@@ -51,7 +51,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 def mess_with_permissions():
-    subprocess.call(['sudo', 'chmod', '777', '/dev/i2c-1'])
+    subprocess.call(['sudo', 'chmod', '777', '/dev/i2c-2'])
 
 
 def unload_driver(name):
@@ -72,12 +72,12 @@ class AutoTests(threading.Thread):
         GLib.idle_add(self.callback, ['Testing MPU-6050', 0, None])
         result = self.test_sensor('mpu6050', 'in_accel_x_raw')
         unload_driver('inv_mpu6050_i2c')
-        result &= selftest.mpu6050(1, 0x68)
+        result &= selftest.mpu6050(2, 0x68)
         load_driver('inv_mpu6050_i2c')
         GLib.idle_add(self.callback, ['Testing LIS3MDL', 1, ('sixaxis', result)])
         result = self.test_sensor('lis3mdl', 'in_magn_x_raw')
         unload_driver('st_magn_i2c')
-        result &= selftest.lis3mdl(1, 0x1e)
+        result &= selftest.lis3mdl(2, 0x1e)
         load_driver('st_magn_i2c')
         GLib.idle_add(self.callback, ['Testing STK3335', 2, ('magnetometer', result)])
         result = self.test_sensor('stk3310', 'in_proximity_raw')

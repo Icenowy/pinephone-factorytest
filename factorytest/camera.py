@@ -1,4 +1,7 @@
 import subprocess
+import re
+
+videodev = '/dev/video1'
 
 
 def take_snapshot(node, res, name, rotate, skip=5):
@@ -9,12 +12,12 @@ def take_snapshot(node, res, name, rotate, skip=5):
 
     width, height = res.split('x')
     fmt = ['width=' + width, 'height=' + height, 'pixelformat=UYVY']
-    command = ['sudo', 'v4l2-ctl', '--device', '/dev/video1', '--set-fmt-video={}'.format(','.join(fmt))]
+    command = ['sudo', 'v4l2-ctl', '--device', videodev, '--set-fmt-video={}'.format(','.join(fmt))]
     p = subprocess.run(command, timeout=5)
     if p.returncode != 0:
         return False
 
-    command = ['sudo', 'v4l2-ctl', '--device', '/dev/video1', '--stream-mmap', '--stream-to=/tmp/frame.raw',
+    command = ['sudo', 'v4l2-ctl', '--device', videodev, '--stream-mmap', '--stream-to=/tmp/frame.raw',
                '--stream-count=1', '--stream-skip={}'.format(skip)]
     p = subprocess.run(command, timeout=10)
     if p.returncode != 0:
@@ -34,13 +37,13 @@ def take_snapshot(node, res, name, rotate, skip=5):
 def set_route(camera):
     if camera == 'ov5640':
         links = [
-            '"gc2145 3-003c":0->"sun6i-csi":0[0]',
-            '"ov5640 3-004c":0->"sun6i-csi":0[1]'
+            '"gc2145 4-003c":0->"sun6i-csi":0[0]',
+            '"ov5640 4-004c":0->"sun6i-csi":0[1]'
         ]
     elif camera == 'gc2145':
         links = [
-            '"ov5640 3-004c":0->"sun6i-csi":0[0]',
-            '"gc2145 3-003c":0->"sun6i-csi":0[1]'
+            '"ov5640 4-004c":0->"sun6i-csi":0[0]',
+            '"gc2145 4-003c":0->"sun6i-csi":0[1]'
         ]
     else:
         raise Exception("Something wrong")
@@ -48,14 +51,23 @@ def set_route(camera):
         subprocess.run(['sudo', 'media-ctl', '-d', '/dev/media1', '--links', link])
 
 
+def find_videodev():
+    global videodev
+    raw = subprocess.check_output(['media-ctl', '-d', '/dev/media1', '-p'], universal_newlines=True)
+    regex = r"/dev/video\d"
+
+    result = re.findall(regex, raw, re.MULTILINE)
+    videodev = result[0]
+
+
 def check_ov5640():
     raw = subprocess.check_output(['media-ctl', '-d', '/dev/media1', '-p'], universal_newlines=True)
     if 'ov5640' not in raw:
         return False
-
+    find_videodev()
     set_route('ov5640')
     try:
-        return take_snapshot('ov5640 3-004c', '1280x720', '/tmp/ov5640.png', '90')
+        return take_snapshot('ov5640 4-004c', '1280x720', '/tmp/ov5640.png', '90')
     except Exception as e:
         print(e)
         return False
@@ -65,10 +77,10 @@ def check_gc2145():
     raw = subprocess.check_output(['media-ctl', '-d', '/dev/media1', '-p'], universal_newlines=True)
     if 'gc2145' not in raw:
         return False
-
+    find_videodev()
     set_route('gc2145')
     try:
-        return take_snapshot('gc2145 3-003c', '1280x720', '/tmp/gc2145.png', '270', skip=35)
+        return take_snapshot('gc2145 4-003c', '1280x720', '/tmp/gc2145.png', '270', skip=35)
     except Exception as e:
         print(e)
         return False

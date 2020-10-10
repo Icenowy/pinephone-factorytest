@@ -7,7 +7,7 @@ def _read_i2c_word():
     pass
 
 
-def mpu6050(bus=1, address=0):
+def mpu6050(bus=2, address=0):
     bus = smbus.SMBus(bus)
 
     # Set accel-config to self-test, 8g
@@ -56,7 +56,7 @@ def mpu6050(bus=1, address=0):
     return max_error < 14
 
 
-def lis3mdl(bus=1, address=0x1e):
+def lis3mdl(bus=2, address=0x1e):
     bus = smbus.SMBus(bus)
 
     def read_sample():
