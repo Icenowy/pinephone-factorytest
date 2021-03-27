@@ -143,3 +143,36 @@ def lis3mdl(bus=2, address=0x1e):
     bus.write_byte_data(address, 0x20, 0x1c)
 
     return ok == 3
+
+def af8133j(bus=2, address=0x1c):
+    bus = smbus.SMBus(bus)
+
+    # Check product code
+    if bus.read_byte_data(address, 0x00) != 0x5e:
+        return False
+
+    # Try to read a sample
+    bus.write_byte_data(address, 0x0a, 0x01)
+
+    dataready = False
+    # Wait for data-ready bits
+    for _ in range(0, 200):
+        status = bus.read_byte_data(address, 0x02)
+        dataready = status & 0x01
+        if dataready:
+            break
+        time.sleep(0.01)
+    if not dataready:
+        raise Exception('AF8133J timeout')
+
+    out_x = bus.read_byte_data(address, 0x03)
+    out_x |= bus.read_byte_data(address, 0x04) << 8
+    out_y = bus.read_byte_data(address, 0x05)
+    out_y |= bus.read_byte_data(address, 0x06) << 8
+    out_z = bus.read_byte_data(address, 0x07)
+    out_z |= bus.read_byte_data(address, 0x08) << 8
+
+    if out_x != 0 and out_y != 0 and out_z != 0:
+        return True
+
+    return False

@@ -411,7 +411,7 @@
                   <object class="GtkLabel">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="label" translatable="yes">LIS3MDL</property>
+                    <property name="label" translatable="yes">LIS3MDL/AF8133J</property>
                   </object>
                   <packing>
                     <property name="left_attach">0</property>

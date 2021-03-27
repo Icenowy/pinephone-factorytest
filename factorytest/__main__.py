@@ -74,10 +74,13 @@ class AutoTests(threading.Thread):
         unload_driver('inv_mpu6050_i2c')
         result &= selftest.mpu6050(2, 0x68)
         load_driver('inv_mpu6050_i2c')
-        GLib.idle_add(self.callback, ['Testing LIS3MDL', 1, ('sixaxis', result)])
+        GLib.idle_add(self.callback, ['Testing LIS3MDL/AF8133J', 1, ('sixaxis', result)])
         result = self.test_sensor('lis3mdl', 'in_magn_x_raw')
         unload_driver('st_magn_i2c')
-        result &= selftest.lis3mdl(2, 0x1e)
+        try:
+            result &= selftest.lis3mdl(2, 0x1e)
+        except:
+            result = selftest.af8133j(2, 0x1c)
         load_driver('st_magn_i2c')
         GLib.idle_add(self.callback, ['Testing STK3335', 2, ('magnetometer', result)])
         result = self.test_sensor('stk3310', 'in_proximity_raw')
